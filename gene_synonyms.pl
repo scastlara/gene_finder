@@ -43,7 +43,7 @@ my $problem_file = shift @ARGV;
 
 # Looking for genes in text...
 
-&text_analyzer($problem_file);
+&text_analyzer($problem_file, \%hash_table);
 
 
 
@@ -316,9 +316,22 @@ sub words_ladder {
 }; # sub words_ladder
 
 
-sub text_analyzer($) {
+
+
+
+#********************************************************************************
+# text_analyzer()
+#
+# Arguments: 
+#			 
+# Returns:   
+#
+#
+
+sub text_analyzer($$) {
 	
 	my $file = shift;
+	my $hash = shift;
 
 	open (TEXTFILE, $file);
 
@@ -331,30 +344,19 @@ sub text_analyzer($) {
 		@words = map { $_=~ s/[^A-Z0-9\s]//gi;
 									   uc $_ } @words;
 
+		
+		my @words_copy = @words;
+
+
+
 		foreach my $word (@words) {
+		
+			my $complete_gene = "";
 
-
-			if (exists $hash_table{$word}) {
-
-
-				if ($hash_table{$word}->[0] == 0) {
-
-					print "$word : $hash_table{$word}->[2]\n";
-	
-				} # if index = 0
-
-
-
-
-
-			} # if primary key exists
-
-
-
-
-
-		} # foreach word
-	
+			&recurive_search($word, \$complete_gene, $hash, @words_copy);
+			
+			splice @words_copy, 0, 1;
+		}	
 
 
 
@@ -366,3 +368,62 @@ sub text_analyzer($) {
 
 
 }; # sub text_analyzer
+
+
+sub recurive_search {
+	
+	my $word = shift;
+	my $complete_gene = shift;
+	my $hash = shift;
+	my @words_copy = @_;
+	
+
+	if (exists $hash->{$word}) {
+
+
+		if ($hash->{$word}->[0] == 0) {
+
+			if ($$complete_gene) {
+
+				$$complete_gene .= " " . $word;
+
+			} else {
+
+				$$complete_gene = $word;
+
+			} # if gene name has more than one word
+			
+			print "$$complete_gene : $hash->{$word}->[2]\n";
+			return;
+	
+		}; # if index = 0
+
+		if ($hash->{$word}->[0] != 0) {
+
+			if ($$complete_gene) {
+
+				$$complete_gene .= " " . $word;
+
+			} else {
+
+				$$complete_gene = $word;
+
+			} # if gene name has more than one word
+
+			
+			splice @words_copy, 0, 1;
+			my $new_hash = $hash->{$word}->[1];
+			&recurive_search($words_copy[0], $complete_gene, $new_hash, @words_copy);
+
+
+		}; # if index = 1 
+
+
+
+	return;
+
+	} # if primary key exists
+
+
+
+}; # sub recurive_search
