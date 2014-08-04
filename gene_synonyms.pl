@@ -332,8 +332,10 @@ sub text_analyzer($$) {
 	
 	my $file = shift;
 	my $hash = shift;
+	my $outfile = "positive_sentences.txt";
 
 	open (TEXTFILE, $file);
+
 
 	while (my $line = <TEXTFILE>) {
 
@@ -353,7 +355,8 @@ sub text_analyzer($$) {
 		
 			my $complete_gene = "";
 
-			&recurive_search($word, \$complete_gene, $hash, @words_copy);
+			&recurive_search($word, \$complete_gene, $hash, $line, @words_copy);
+
 			
 			splice @words_copy, 0, 1;
 		}	
@@ -364,7 +367,7 @@ sub text_analyzer($$) {
 	} # while <TEXTFILE>
 
 
-
+	close (TEXTFILE);
 
 
 }; # sub text_analyzer
@@ -385,6 +388,7 @@ sub recurive_search {
 	my $word = shift;
 	my $complete_gene = shift;
 	my $hash = shift;
+	my $line = shift;
 	my @words_copy = @_;
 	
 
@@ -403,7 +407,7 @@ sub recurive_search {
 
 			} # if gene name has one word or else
 			
-			print "$$complete_gene : $hash->{$word}->[2]\n";
+			print "\nMATCH ($$complete_gene : $hash->{$word}->[2]) at: \n $line\n";
 			
 			return;
 	
@@ -424,7 +428,7 @@ sub recurive_search {
 			
 			my $new_hash = $hash->{$word}->[1];
 			
-			&recurive_search($words_copy[0], $complete_gene, $new_hash, @words_copy);
+			&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, @words_copy);
 
 
 		} elsif ($hash->{$word}->[0] == 2) {
@@ -446,11 +450,11 @@ sub recurive_search {
 
 			if (exists $new_hash->{$words_copy[0]}) {
 
-				&recurive_search($words_copy[0], $complete_gene, $new_hash, @words_copy);
+				&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, @words_copy);
 
 			} else {
 
-				print "$$complete_gene : $hash->{$word}->[2]\n";
+				print "\nMATCH ($$complete_gene : $hash->{$word}->[2]) at: \n $line\n";
 			
 				return;
 
