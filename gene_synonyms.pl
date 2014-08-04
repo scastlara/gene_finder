@@ -370,6 +370,16 @@ sub text_analyzer($$) {
 }; # sub text_analyzer
 
 
+
+#********************************************************************************
+# recursive_search()
+#
+# Arguments: 
+#			 
+# Returns:   
+#
+#
+
 sub recurive_search {
 	
 	my $word = shift;
@@ -391,14 +401,13 @@ sub recurive_search {
 
 				$$complete_gene = $word;
 
-			} # if gene name has more than one word
+			} # if gene name has one word or else
 			
 			print "$$complete_gene : $hash->{$word}->[2]\n";
+			
 			return;
 	
-		}; # if index = 0
-
-		if ($hash->{$word}->[0] != 0) {
+		} elsif ($hash->{$word}->[0] == 1) {
 
 			if ($$complete_gene) {
 
@@ -408,15 +417,47 @@ sub recurive_search {
 
 				$$complete_gene = $word;
 
-			} # if gene name has more than one word
+			} # if gene name has one word or else
 
-			
+
 			splice @words_copy, 0, 1;
+			
 			my $new_hash = $hash->{$word}->[1];
+			
 			&recurive_search($words_copy[0], $complete_gene, $new_hash, @words_copy);
 
 
-		}; # if index = 1 
+		} elsif ($hash->{$word}->[0] == 2) {
+
+			if ($$complete_gene) {
+
+				$$complete_gene .= " " . $word;
+
+			} else {
+
+				$$complete_gene = $word;
+
+			} # if gene name has one word or else
+
+			splice @words_copy, 0, 1;
+
+			my $new_hash = $hash->{$word}->[1];
+
+
+			if (exists $new_hash->{$words_copy[0]}) {
+
+				&recurive_search($words_copy[0], $complete_gene, $new_hash, @words_copy);
+
+			} else {
+
+				print "$$complete_gene : $hash->{$word}->[2]\n";
+			
+				return;
+
+			} # if next word exists in hash table
+
+
+		}; # if index = (0 or 1 or 2)
 
 
 
