@@ -23,6 +23,8 @@ use LWP::Simple;
 
 my $text = "";
 my %hash_table = ();
+my $synonyms = shift @ARGV;
+#my $problem_file = shift @ARGV;
 
 
 
@@ -32,33 +34,57 @@ my %hash_table = ();
 #********************************************************************************
 
 
-my $url = 'http://www.genenames.org/cgi-bin/download?'.
-          'col=gd_app_sym&'.        
-          'col=gd_app_name&'.
-          'col=gd_prev_sym&'.
-          'col=gd_aliases&'.
-          'col=gd_pub_ensembl_id&'.
-          'col=gd_pub_refseq_ids&'.
-          'col=md_prot_id&'.
-          'col=gd_prev_name&'.
-          'col=gd_name_aliases&'.
-          'status=Approved&'.
-          'status=Entry%20Withdrawn&'.
-          'status_opt=2&'.
-          'where=&'.
-          'order_by=gd_hgnc_id&'.
-          'format=text&'.
-          'limit=&'.
-          'hgnc_dbtag=on&'.
-          'submit=submit';
+# Creating hash table...
 
-my $page = get($url);
-
-&table_reader(\$page);
+&table_reader($synonyms);
 
 print Data::Dumper-> Dump ([ \ %hash_table,], [ qw/ *HASH TABLE/ ]) ;
 
-#print keys %{$hash_table{RNA}->[1]}, "\n";
+
+# Looking for genes in text...
+
+#open (TEXTFILE, $file);
+
+#while (my $line = <TEXTFILE>) {
+
+#	chomp $line;
+	
+#	my @words = split /\s/, $line;
+	
+#	@words = map { $_=~ s/[^A-Z0-9\s]//gi;
+#				   uc $_ } @words;
+
+#	foreach my $word (@words) {
+
+
+#		if (exists $hash_table{$word}) {
+
+
+#			if ($hash_table{$word}->[0] == 0) {
+
+#				print "$word : $hash_table{$word}->[2]\n";
+#
+#			} # if index = 0
+
+
+
+
+
+#		} # if primary key exists
+
+
+
+
+
+#	} # foreach word
+	
+
+
+
+
+#} # while <TEXTFILE>
+
+
 
 
 
@@ -80,14 +106,15 @@ print Data::Dumper-> Dump ([ \ %hash_table,], [ qw/ *HASH TABLE/ ]) ;
 
 
 sub table_reader($) {
-	my $web_page = shift;
-
-	my @lines = split /\n/, $$web_page;
-
+	my $synonyms = shift;
 
 	# reading webpage line by line
 
-	foreach my $line (@lines) {
+	open (SYN, $synonyms);
+	
+	<SYN>; # skip 1st line
+	
+	while (my $line = <SYN>) {
 		
 		next if ($line =~ m/withdrawn/g);
 		my @fields = split /\t/, $line;
@@ -152,7 +179,7 @@ sub table_reader($) {
     
     			push @quoted_fields, $match;
     
-   			 }; # while
+   			 }; # while match
 
 		};
 
@@ -167,19 +194,19 @@ sub table_reader($) {
 				$match =~ s/^\s//; # remove first character if it is a whitespace
     			push @quoted_fields, $match;
     
-   			 }; # while
+   			 }; # while match
 
 		};
 
 
 		@all_synonyms = (@normal_fields, @quoted_fields);
 
-		#print "@all_synonyms\n";
-
 
 		&hash_creator($Ap_SYMBOL, \@all_synonyms);		
 
-	} # foreach line
+	} # while <SYN>
+
+	close (SYN);
 
 
 } # sub table_reader
