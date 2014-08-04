@@ -24,7 +24,7 @@ use LWP::Simple;
 my $text = "";
 my %hash_table = ();
 my $synonyms = shift @ARGV;
-#my $problem_file = shift @ARGV;
+my $problem_file = shift @ARGV;
 
 
 
@@ -38,52 +38,12 @@ my $synonyms = shift @ARGV;
 
 &table_reader($synonyms);
 
-print Data::Dumper-> Dump ([ \ %hash_table,], [ qw/ *HASH TABLE/ ]) ;
+#print Data::Dumper-> Dump ([ \ %hash_table,], [ qw/ *HASH TABLE/ ]) ;
 
 
 # Looking for genes in text...
 
-#open (TEXTFILE, $file);
-
-#while (my $line = <TEXTFILE>) {
-
-#	chomp $line;
-	
-#	my @words = split /\s/, $line;
-	
-#	@words = map { $_=~ s/[^A-Z0-9\s]//gi;
-#				   uc $_ } @words;
-
-#	foreach my $word (@words) {
-
-
-#		if (exists $hash_table{$word}) {
-
-
-#			if ($hash_table{$word}->[0] == 0) {
-
-#				print "$word : $hash_table{$word}->[2]\n";
-#
-#			} # if index = 0
-
-
-
-
-
-#		} # if primary key exists
-
-
-
-
-
-#	} # foreach word
-	
-
-
-
-
-#} # while <TEXTFILE>
-
+&text_analyzer($problem_file);
 
 
 
@@ -354,3 +314,55 @@ sub words_ladder {
 	&words_ladder($SYMBOL, $syn_words_ary, $new_hsh, $synonym);
 
 }; # sub words_ladder
+
+
+sub text_analyzer($) {
+	
+	my $file = shift;
+
+	open (TEXTFILE, $file);
+
+	while (my $line = <TEXTFILE>) {
+
+		chomp $line;
+	
+		my @words = split /\s/, $line;
+	
+		@words = map { $_=~ s/[^A-Z0-9\s]//gi;
+									   uc $_ } @words;
+
+		foreach my $word (@words) {
+
+
+			if (exists $hash_table{$word}) {
+
+
+				if ($hash_table{$word}->[0] == 0) {
+
+					print "$word : $hash_table{$word}->[2]\n";
+	
+				} # if index = 0
+
+
+
+
+
+			} # if primary key exists
+
+
+
+
+
+		} # foreach word
+	
+
+
+
+
+	} # while <TEXTFILE>
+
+
+
+
+
+}; # sub text_analyzer
