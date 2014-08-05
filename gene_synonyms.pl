@@ -25,6 +25,8 @@ my $text = "";
 my %hash_table = ();
 my $synonyms = shift @ARGV;
 my $problem_file = shift @ARGV;
+my $stop_words_file = shift @ARGV;
+my %stop_words = ();
 
 
 
@@ -38,14 +40,16 @@ my $problem_file = shift @ARGV;
 
 &table_reader($synonyms);
 
-#print Data::Dumper-> Dump ([ \ %hash_table,], [ qw/ *HASH TABLE/ ]) ;
+#print STDERR Data::Dumper-> Dump ([ \ %hash_table,], [ qw/ *HASH TABLE/ ]) ;
 
 
 # Looking for genes in text...
 
-&text_analyzer($problem_file, \%hash_table);
+&stop_words_reader($stop_words_file, \%stop_words);
 
+#print Data::Dumper-> Dump ([ \ %stop_words,], [ qw/ *HASH TABLE/ ]);
 
+&text_analyzer($problem_file, \%hash_table, \%stop_words);
 
 
 
@@ -59,7 +63,7 @@ my $problem_file = shift @ARGV;
 #
 # Arguments: webpage with symbols and synonyms in plain text
 #
-# Returns: nothing, it creates an array with synonyms.
+# Returns: nothing, it creates an array with synonyms
 #		   it calls hash_creator()
 #
 #
@@ -190,6 +194,23 @@ sub hash_creator {
 	my $SYMBOL = shift;
 	my $synonyms_ary = shift;
 
+	
+	# ENTRIES FOR SYMBOLS!
+	
+	if (!exists $hash_table{$SYMBOL}) {
+
+		$hash_table{$SYMBOL} = [];
+		$hash_table{$SYMBOL}->[0] = '0';
+		$hash_table{$SYMBOL}->[1] = undef;
+		$hash_table{$SYMBOL}->[2] = $SYMBOL;
+		$hash_table{$SYMBOL}->[3] = $SYMBOL; 
+
+
+	} # if SYMBOL doesn't exist
+
+
+
+	# ENTRIES FOR SYNONYMS
 
 	foreach my $synonym (@$synonyms_ary) {
 
@@ -318,6 +339,42 @@ sub words_ladder {
 
 
 
+#********************************************************************************
+# stop_words_reader()
+#
+# Arguments: file with english stopwords
+#			 reference to stopwords hash
+#			 
+# Returns:   nothing
+#			 it creates stopwords hash's keys 
+#
+#
+
+
+sub stop_words_reader {
+	
+
+	my $file = shift;
+	my $stop_words_hsh = shift;
+
+	open (WORDS, $file) or die "Can't open stopwords file\n";
+	
+	while (<WORDS>) {
+		
+		chomp;
+
+		next if (/^\s+/g); # skip blank lines
+
+		$stop_words_hsh->{$_} = undef if (!exists $stop_words_hsh->{$_});
+
+
+	}; # while <WORDS>
+
+
+}; # sub stop_words_reader
+
+
+
 
 #********************************************************************************
 # text_analyzer()
@@ -332,6 +389,7 @@ sub text_analyzer($$) {
 	
 	my $file = shift;
 	my $hash = shift;
+	my $stop_words_hsh = shift;
 	my $outfile = "positive_sentences.txt";
 
 	open (TEXTFILE, $file);
@@ -340,11 +398,18 @@ sub text_analyzer($$) {
 	while (my $line = <TEXTFILE>) {
 
 		chomp $line;
+
+		$line =~ s/\.//g;
 	
-		my @words = split /\s/, $line;
+		my @allwords = split /\s/, $line;
 	
+
+		my @words = grep { !exists $stop_words_hsh->{$_} } @allwords;
+
 		@words = map { $_=~ s/[^A-Z0-9\s]//gi;
 									   uc $_ } @words;
+
+
 
 		
 		my @words_copy = @words;
@@ -377,9 +442,15 @@ sub text_analyzer($$) {
 #********************************************************************************
 # recursive_search()
 #
-# Arguments: 
+# Arguments: first word to analyze
+#			 scalar with gene name (it becomes longer as the function calls itself)
+#			 hash with synonyms
+#			 line that it is processing
+#			 a copy of all the words in the sentence (from the first word onwards)
+# 
 #			 
-# Returns:   
+# Returns:   nothing 
+#			 it prints gene symbol, synonym and the line that contains it
 #
 #
 
