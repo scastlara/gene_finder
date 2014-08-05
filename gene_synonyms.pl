@@ -47,9 +47,15 @@ my %stop_words = ();
 
 &stop_words_reader($stop_words_file, \%stop_words);
 
-#print Data::Dumper-> Dump ([ \ %stop_words,], [ qw/ *HASH TABLE/ ]);
 
-&text_analyzer($problem_file, \%hash_table, \%stop_words);
+# Creating output file name
+
+my $matches_out = "matches_$problem_file";
+
+
+# Analyze text
+
+&text_analyzer($problem_file, \%hash_table, \%stop_words, $matches_out);
 
 
 
@@ -390,9 +396,11 @@ sub text_analyzer($$) {
 	my $file = shift;
 	my $hash = shift;
 	my $stop_words_hsh = shift;
-	my $outfile = "positive_sentences.txt";
+	my $outfile = shift;
 
 	open (TEXTFILE, $file);
+
+	open (my $OUTFILE, "> $outfile");
 
 
 	while (my $line = <TEXTFILE>) {
@@ -407,7 +415,7 @@ sub text_analyzer($$) {
 		my @words = grep { !exists $stop_words_hsh->{$_} } @allwords;
 
 		@words = map { $_=~ s/[^A-Z0-9\s]//gi;
-									   uc $_ } @words;
+									    $_ } @words;
 
 
 
@@ -420,7 +428,7 @@ sub text_analyzer($$) {
 		
 			my $complete_gene = "";
 
-			&recurive_search($word, \$complete_gene, $hash, $line, @words_copy);
+			&recurive_search($word, \$complete_gene, $hash, $line, $OUTFILE, @words_copy);
 
 			
 			splice @words_copy, 0, 1;
@@ -460,6 +468,7 @@ sub recurive_search {
 	my $complete_gene = shift;
 	my $hash = shift;
 	my $line = shift;
+	my $OUTFILE = shift;
 	my @words_copy = @_;
 	
 
@@ -480,7 +489,7 @@ sub recurive_search {
 
 			} # if gene name has one word or else
 			
-			print "MATCH ($$complete_gene : $hash->{$word}->[2]) at:\n".
+			print $OUTFILE "MATCH ($$complete_gene : $hash->{$word}->[2]) at:\n".
 				  "$line\n\n";	
 				  		
 			return;
@@ -502,7 +511,7 @@ sub recurive_search {
 			
 			my $new_hash = $hash->{$word}->[1];
 			
-			&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, @words_copy);
+			&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, $OUTFILE, @words_copy);
 
 
 		} elsif ($hash->{$word}->[0] == 2) {
@@ -524,11 +533,11 @@ sub recurive_search {
 
 			if (exists $new_hash->{$words_copy[0]}) {
 
-				&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, @words_copy);
+				&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, $OUTFILE, @words_copy);
 
 			} else {
 
-				print "MATCH ($$complete_gene : $hash->{$word}->[2]) at:\n".
+				print $OUTFILE "MATCH ($$complete_gene : $hash->{$word}->[2]) at:\n".
 				      "$line\n\n";
 			
 				return;
