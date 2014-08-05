@@ -1,12 +1,15 @@
 #!/usr/bin/perl
 #
-# Article_downloader.pl - This script reads a website that contains a 
+# Article_downloader.pl - This script reads a file that contains a 
 #						  list of gene symbols and its corresponding 
-#						  synonyms and it creates a synonyms hash table
+#						  synonyms and it creates a synonyms hash table.
+#						  Then, it looks for matches in a text file and 
+#						  saves the lines containing them as matches_originalfile.txt
 #
-#			Arguments: 	  none
+#			Arguments: 	  Synonyms tabular file
+#						  Text file to analyze
+#						  Stopwords file
 #
-# 			Requirements: none
 #
 #********************************************************************************
 
@@ -23,6 +26,14 @@ use LWP::Simple;
 
 my $text = "";
 my %hash_table = ();
+
+die "\nYou have to introduce 3 files as command line arguments:\n" .
+	"\t- Gene synonyms table\n" .
+	"\t- The text file you want to analyze\n" .
+	"\t- Stopwords file\n\n"
+
+	unless (@ARGV == 3);
+
 my $synonyms = shift @ARGV;
 my $problem_file = shift @ARGV;
 my $stop_words_file = shift @ARGV;
@@ -76,6 +87,7 @@ my $matches_out = "matches_$problem_file";
 
 
 sub table_reader($) {
+	
 	my $synonyms = shift;
 
 	# reading webpage line by line
@@ -201,7 +213,7 @@ sub hash_creator {
 	my $synonyms_ary = shift;
 
 	
-	# ENTRIES FOR SYMBOLS!
+	# SYMBOL KEYS!
 	
 	if (!exists $hash_table{$SYMBOL}) {
 
@@ -212,11 +224,17 @@ sub hash_creator {
 		$hash_table{$SYMBOL}->[3] = $SYMBOL; 
 
 
-	} # if SYMBOL doesn't exist
+	} elsif ($hash_table{$SYMBOL}->[0] == 1){
+
+		$hash_table{$SYMBOL}->[0] = '2';
+		$hash_table{$SYMBOL}->[2] = $SYMBOL;
+		$hash_table{$SYMBOL}->[3] = $SYMBOL; 
+
+	} # if 
 
 
 
-	# ENTRIES FOR SYNONYMS
+	# SYNONYM KEYS
 
 	foreach my $synonym (@$synonyms_ary) {
 
@@ -385,9 +403,14 @@ sub stop_words_reader {
 #********************************************************************************
 # text_analyzer()
 #
-# Arguments: 
+# Arguments: file to analyze
+#			 synonyms hash table
+#			 stopwords hash
+#			 output file name
 #			 
-# Returns:   
+# Returns:   nothing
+#			 it finds genes in a text file and saves lines that contain them
+#			 it calls recursive_search()
 #
 #
 
@@ -400,39 +423,41 @@ sub text_analyzer($$) {
 
 	open (TEXTFILE, $file);
 
-	open (my $OUTFILE, "> $outfile");
+	open (OUTFILE, "> $outfile");
 
 
 	while (my $line = <TEXTFILE>) {
 
 		chomp $line;
-
-		$line =~ s/\.//g;
 	
-		my @allwords = split /\s/, $line;
+		my @allwords = split /\s/, $line; 
 	
+		@allwords = map { $_=~ s/[\.,]//g;
+									   $_ } @allwords; # removes commas and periods for processing
 
-		my @words = grep { !exists $stop_words_hsh->{$_} } @allwords;
+		my @words = grep { !exists $stop_words_hsh->{$_} } @allwords; # Removes stopwords for processing
 
 		@words = map { $_=~ s/[^A-Z0-9\s]//gi;
-									    $_ } @words;
-
-
-
+									    uc $_ } @words; # removes not word/number characters and makes everything uppercase
 		
+		
+
 		my @words_copy = @words;
-
-
 
 		foreach my $word (@words) {
 		
 			my $complete_gene = "";
 
-			&recurive_search($word, \$complete_gene, $hash, $line, $OUTFILE, @words_copy);
-
+			&recurive_search($word, \$complete_gene, $hash, $line, *OUTFILE, @words_copy);
+			
+			# remove complete gene from array of words (to avoid internal matches)
+			
+			@words = map { $_=~ s/$complete_gene//; $_ } @words;
+			@words_copy = map { $_=~ s/$complete_gene//; $_ } @words_copy;
 			
 			splice @words_copy, 0, 1;
-		}	
+		
+		} # foreach word
 
 
 
@@ -441,6 +466,7 @@ sub text_analyzer($$) {
 
 
 	close (TEXTFILE);
+	close (OUTFILE);
 
 
 }; # sub text_analyzer
@@ -451,9 +477,10 @@ sub text_analyzer($$) {
 # recursive_search()
 #
 # Arguments: first word to analyze
-#			 scalar with gene name (it becomes longer as the function calls itself)
+#			 ref to scalar with gene name (it becomes longer as the function calls itself)
 #			 hash with synonyms
 #			 line that it is processing
+#			 output filehandle
 #			 a copy of all the words in the sentence (from the first word onwards)
 # 
 #			 
@@ -473,6 +500,8 @@ sub recurive_search {
 	
 
 	return unless ($word); # ends function if it runs out of words
+
+	
 
 	if (exists $hash->{$word}) {
 
@@ -552,7 +581,6 @@ sub recurive_search {
 	return;
 
 	} # if primary key exists
-
 
 
 }; # sub recurive_search
