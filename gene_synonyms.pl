@@ -433,7 +433,7 @@ sub text_analyzer($$) {
 		my @allwords = split /\s/, $line; 
 	
 		@allwords = map { $_=~ s/[\.,]//g;
-									   $_ } @allwords; # removes commas and periods for processing
+						  $_ } @allwords; # removes commas and periods for processing
 
 		my @words = grep { !exists $stop_words_hsh->{$_} } @allwords; # Removes stopwords for processing
 
@@ -444,19 +444,32 @@ sub text_analyzer($$) {
 
 		my @words_copy = @words;
 
-		foreach my $word (@words) {
+		for (my $i = 0; $i < @words; $i) {
+			
+
+		#foreach my $word (@words) {
 		
 			my $complete_gene = "";
 
-			&recurive_search($word, \$complete_gene, $hash, $line, *OUTFILE, @words_copy);
+			&recurive_search($words[$i], \$complete_gene, $hash, $line, *OUTFILE, @words_copy);
 			
 			# remove complete gene from array of words (to avoid internal matches)
 			
-			@words = map { $_=~ s/$complete_gene//; $_ } @words;
-			@words_copy = map { $_=~ s/$complete_gene//; $_ } @words_copy;
+			if ($complete_gene) {
+
+				my $count = $complete_gene =~ s/((^|\s)\S)/$1/g;
+
+				$i += $count; 
 			
-			splice @words_copy, 0, 1;
-		
+				splice @words_copy, 0, $count;
+
+			} else {
+
+				$i++;
+				splice (@words_copy, 0, 1);
+
+			} # if
+
 		} # foreach word
 
 
@@ -555,12 +568,14 @@ sub recurive_search {
 
 			} # if gene name has one word or else
 
-			splice @words_copy, 0, 1;
+			
 
 			my $new_hash = $hash->{$word}->[1];
 
 
 			if (exists $new_hash->{$words_copy[0]}) {
+
+				splice @words_copy, 0, 1;
 
 				&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, $OUTFILE, @words_copy);
 
