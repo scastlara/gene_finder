@@ -444,10 +444,8 @@ sub text_analyzer($$) {
 
 		my @words_copy = @words;
 
-		for (my $i = 0; $i < @words; $i) {
+		for (my $i = 0; $i < @words;) {
 			
-
-		#foreach my $word (@words) {
 		
 			my $complete_gene = "";
 
@@ -466,7 +464,7 @@ sub text_analyzer($$) {
 			} else {
 
 				$i++;
-				splice (@words_copy, 0, 1);
+				splice @words_copy, 0, 1;
 
 			} # if
 
