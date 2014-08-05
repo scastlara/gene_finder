@@ -392,6 +392,8 @@ sub recurive_search {
 	my @words_copy = @_;
 	
 
+	return unless ($word); # ends function if it runs out of words
+
 	if (exists $hash->{$word}) {
 
 
@@ -407,8 +409,9 @@ sub recurive_search {
 
 			} # if gene name has one word or else
 			
-			print "\nMATCH ($$complete_gene : $hash->{$word}->[2]) at: \n $line\n";
-			
+			print "MATCH ($$complete_gene : $hash->{$word}->[2]) at:\n".
+				  "$line\n\n";	
+				  		
 			return;
 	
 		} elsif ($hash->{$word}->[0] == 1) {
@@ -454,7 +457,8 @@ sub recurive_search {
 
 			} else {
 
-				print "\nMATCH ($$complete_gene : $hash->{$word}->[2]) at: \n $line\n";
+				print "MATCH ($$complete_gene : $hash->{$word}->[2]) at:\n".
+				      "$line\n\n";
 			
 				return;
 
