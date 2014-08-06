@@ -81,7 +81,7 @@ print STDERR "\n## MATCHES SAVED AS $matches_out.\n## PROGRAM FINISHED ##\n";
 #********************************************************************************
 # table_reader()
 #
-# Arguments: webpage with symbols and synonyms in plain text
+# Arguments: file with symbols and synonyms in plain text (tbl)
 #
 # Returns: nothing, it creates an array with synonyms
 #		   it calls hash_creator()
@@ -237,7 +237,7 @@ sub hash_creator {
 
 
 
-	# SYNONYM KEYS
+	# SYNONYM KEYS!
 
 	foreach my $synonym (@$synonyms_ary) {
 
@@ -305,7 +305,7 @@ sub hash_creator {
 #            empty hash			 
 #
 # Returns:   nothing
-#			 it keeps calling itself until it runs out of words
+#			 it keeps calling itself until syn_words_ary runs out of words
 #
 #
 
@@ -373,7 +373,7 @@ sub words_ladder {
 #			 reference to stopwords hash
 #			 
 # Returns:   nothing
-#			 it creates stopwords hash's keys 
+#			 it creates stopwords keys 
 #
 #
 
@@ -573,11 +573,9 @@ sub recurive_search {
 			
 
 			my $new_hash = $hash->{$word}->[1];
+			splice @words_copy, 0, 1;
 
-
-			if (exists $new_hash->{$words_copy[0]}) {
-
-				splice @words_copy, 0, 1;
+			if ($words_copy[0] and exists $new_hash->{$words_copy[0]}) {
 
 				&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, $OUTFILE, @words_copy);
 
