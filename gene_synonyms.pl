@@ -47,26 +47,29 @@ my %stop_words = ();
 #********************************************************************************
 
 
-# Creating hash table...
+print STDERR "\n## STARTING PROGRAM ##\n## CREATING SYNONYMS HASH TABLE...\n";
 
 &table_reader($synonyms);
 
 #print STDERR Data::Dumper-> Dump ([ \ %hash_table,], [ qw/ *HASH TABLE/ ]) ;
 
 
-# Looking for genes in text...
+print STDERR "\n## READING STOPWORDS LIST...\n";
 
 &stop_words_reader($stop_words_file, \%stop_words);
 
 
 # Creating output file name
 
-my $matches_out = "matches_$problem_file";
+my $matches_out = "matches_$problem_file"; 
 
 
-# Analyze text
+print STDERR "\n## LOOKING FOR GENES IN TEXT...\n";
 
 &text_analyzer($problem_file, \%hash_table, \%stop_words, $matches_out);
+
+
+print STDERR "\n## MATCHES SAVED AS $matches_out.\n## PROGRAM FINISHED ##\n";
 
 
 
@@ -451,7 +454,8 @@ sub text_analyzer($$) {
 
 			&recurive_search($words[$i], \$complete_gene, $hash, $line, *OUTFILE, @words_copy);
 			
-			# remove complete gene from array of words (to avoid internal matches)
+			
+			# skip complete gene from iteration (to avoid internal matches)
 			
 			if ($complete_gene) {
 
