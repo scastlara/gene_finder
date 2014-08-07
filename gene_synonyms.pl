@@ -41,34 +41,27 @@ my %stop_words = ();
 my @tagged_lines = ();
 
 
-
-
 #********************************************************************************
 # MAIN LOOP 
 #********************************************************************************
 
 
 print STDERR "\n## STARTING PROGRAM ##\n## CREATING SYNONYMS HASH TABLE...\n";
+
 &table_reader($synonyms);
 
-#print STDERR Data::Dumper-> Dump ([ \ %hash_table,], [ qw/ *HASH TABLE/ ]) ;
-
 print STDERR "\n## READING STOPWORDS LIST...\n";
+
 &stop_words_reader($stop_words_file, \%stop_words);
 
-
-# Creating output file name
-
 print STDERR "\n## LOOKING FOR GENES IN TEXT...\n";
-@tagged_lines = &text_analyzer($problem_file, \%hash_table, \%stop_words);
 
-my $matches_out = "matches_$problem_file"; 
+@tagged_lines = &text_analyzer($problem_file, \%hash_table, \%stop_words);
+$problem_file =~ s/.+\///;
+my $matches_out = "matches_$problem_file"; # Creating output file name
 &tagged_lines_filter(\@tagged_lines, $matches_out);
 
-
 print STDERR "\n## MATCHES SAVED AS $matches_out.\n## PROGRAM FINISHED ##\n";
-
-
 
 
 #********************************************************************************
@@ -184,7 +177,6 @@ sub table_reader($) {
 } # sub table_reader
 
 
-
 #********************************************************************************
 # hash_creator()
 #
@@ -261,7 +253,6 @@ sub hash_creator {
 } # sub hash_creator
 
 
-
 #********************************************************************************
 # words_ladder()
 #
@@ -304,6 +295,7 @@ sub words_ladder {
 		$new_hsh->[0] = '2'; # index = 2 if it's a dead end but there's a defined hash in [1]
 		$new_hsh->[2] = $SYMBOL;
 		$new_hsh->[3] = $synonym; # puts original synonym if it's a dead end
+		
 		return;
 
 	} elsif (@$syn_words_ary == 0) {
@@ -312,6 +304,7 @@ sub words_ladder {
 		$new_hsh->[1] = undef;
 		$new_hsh->[2] = $SYMBOL;
 		$new_hsh->[3] = $synonym; # puts original synonym if it's a dead end
+		
 		return;
 
 	}; # if 
@@ -319,8 +312,6 @@ sub words_ladder {
 	&words_ladder($SYMBOL, $syn_words_ary, $new_hsh, $synonym);
 
 }; # sub words_ladder
-
-
 
 
 #********************************************************************************
@@ -346,12 +337,12 @@ sub stop_words_reader {
 		chomp;
 		next if (/^\s+/g); # skip blank lines
 		$stop_words_hsh->{$_} = undef if (!exists $stop_words_hsh->{$_});
+		$stop_words_hsh->{ucfirst$_} = undef if (!exists $stop_words_hsh->{ucfirst$_});
+		$stop_words_hsh->{$_,} = undef if (!exists $stop_words_hsh->{$_,});
 
 	}; # while <WORDS>
 
 }; # sub stop_words_reader
-
-
 
 
 #********************************************************************************
@@ -360,10 +351,9 @@ sub stop_words_reader {
 # Arguments: file to analyze
 #			 synonyms hash table
 #			 stopwords hash
-#			 output file name
 #			 
-# Returns:   nothing
-#			 it finds genes in a text file and saves lines that contain them
+# Returns:   array with symbols appended
+#			 it finds genes in a text file
 #			 it calls recursive_search()
 #
 #
@@ -382,13 +372,7 @@ sub text_analyzer($$) {
 
 		chomp $line;
 		my @allwords = split /\s/, $line; 
-		#@allwords = map { $_=~ s/[\.,]//g;
-		#				  $_ } @allwords; # removes commas and periods for processing
-
 		my @words = grep { !exists $stop_words_hsh->{$_} } @allwords; # Removes stopwords for processing
-		#@words = map { $_=~ s/[^A-Z0-9\s]//gi;
-		#							    uc $_ } @words; # removes not word/number characters and makes everything uppercase
-
 		my @words_copy = @words;
 
 		for (my $i = 0; $i < @words;) {
@@ -413,8 +397,10 @@ sub text_analyzer($$) {
 			} # if
 
 			$complete_gene = "";
+			
 		} # foreach word
 
+		$line =~ s/^\s//;
 		push @tagged_lines, $line;
 		
 	} # while <TEXTFILE>
@@ -426,7 +412,6 @@ sub text_analyzer($$) {
 }; # sub text_analyzer
 
 
-
 #********************************************************************************
 # recursive_search()
 #
@@ -434,12 +419,11 @@ sub text_analyzer($$) {
 #			 ref to scalar with gene name (it becomes longer as the function calls itself)
 #			 hash with synonyms
 #			 line that it is processing
-#			 output filehandle
 #			 a copy of all the words in the sentence (from the first word onwards)
 # 
 #			 
 # Returns:   nothing 
-#			 it prints gene symbol, synonym and the line that contains it
+#			 it tags gene names and appends HUGO approved symbol to the sentence
 #
 #
 
@@ -454,7 +438,6 @@ sub recurive_search {
 	return unless ($word); # ends function if it runs out of words
 
 	my $possible_gene = uc($word);
-	$possible_gene =~ s/[\.,]//g;
 	$possible_gene =~ s/[^A-Z0-9\s]//gi;
 
 	if (exists $hash->{$possible_gene}) {
@@ -471,10 +454,8 @@ sub recurive_search {
 
 			} # if gene name has one word or else
 			
-			$$line =~ s/($$complete_gene)/#$1 && $hash->{$possible_gene}->[2]#/;
-			#print "$$line\n";
-			#print $OUTFILE "MATCH ($$complete_gene : $hash->{$possible_gene}->[2]) at:\n".
-			#	  "$$line\n\n";			
+			$$line =~ s/[^#]($$complete_gene)|^($$complete_gene)/ #$$complete_gene && $hash->{$possible_gene}->[2]#/;
+			
 			return;
 	
 		} elsif ($hash->{$possible_gene}->[0] == 1) {
@@ -507,12 +488,11 @@ sub recurive_search {
 
 			my $new_hash = $hash->{$possible_gene}->[1];
 			splice @words_copy, 0, 1;
-
 			my $next_word = "";
+			
 			if ($words_copy[0]) {
 				
 				$next_word = uc($words_copy[0]);
-				$next_word =~ s/[\.,]//g;
 				$next_word =~ s/[^A-Z0-9\s]//gi;
 			
 			}
@@ -523,10 +503,8 @@ sub recurive_search {
 
 			} else {
 
-				$$line =~ s/($$complete_gene)/#$1 && $hash->{$possible_gene}->[2]#/;
-				#print "$$line\n";
-				#print $OUTFILE "MATCH ($$complete_gene : $hash->{$possible_gene}->[2]) at:\n".
-				#      "$$line\n\n";
+				$$line =~ s/[^#]($$complete_gene)|^($$complete_gene)/ #$$complete_gene && $hash->{$possible_gene}->[2]#/;
+				
 				return;
 				
 			} # if next word exists in hash table
@@ -543,9 +521,11 @@ sub recurive_search {
 #********************************************************************************
 # tagged_lines_filter
 #
-# Arguments: 
+# Arguments: array ref with tagged lines
+#			 file output name 
 #			 
-# Returns:   
+# Returns: nothing
+#		   it prints in output file those lines with one or more tags
 #
 #
 
