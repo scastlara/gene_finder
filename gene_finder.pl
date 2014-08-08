@@ -24,20 +24,20 @@ use LWP::Simple;
 # VARIABLES 
 #********************************************************************************
 
-my $text = "";
+my $text 	   = "";
 my %hash_table = ();
 
 die "\nYou have to introduce 3 files as command line arguments:\n" .
 	"\t- Gene synonyms table\n" .
-	"\t- The text file you want to analyze\n" .
-	"\t- Stopwords file\n\n"
+	"\t- Stopwords file\n" .
+	"\t- The text file you want to analyze\n\n"
 
 	unless (@ARGV >= 3);
 
-my $synonyms = shift @ARGV;
+my $synonyms 		= shift @ARGV;
 my $stop_words_file = shift @ARGV;
-my @problem_files = @ARGV;
-my %stop_words = ();
+my @problem_files   = @ARGV;
+my %stop_words 		= ();
 
 #********************************************************************************
 # MAIN LOOP 
@@ -58,14 +58,12 @@ foreach my $file (@problem_files) {
 
 	my @tagged_lines = &text_analyzer($file, \%hash_table, \%stop_words);
 	$file =~ s/.+\///;
-	my $matches_out = "arreglo_$file"; # Creating output file name
+	my $matches_out = "matches_$file"; # Creating output file name
 	&tagged_lines_filter(\@tagged_lines, $matches_out);
 
 	print STDERR "\n## MATCHES SAVED AS $matches_out.\n## PROGRAM FINISHED ##\n";
 
 }
-
-
 
 
 #********************************************************************************
@@ -83,7 +81,7 @@ foreach my $file (@problem_files) {
 #
 
 
-sub table_reader($) {
+sub table_reader {
 	
 	my $synonyms = shift;
 
@@ -341,7 +339,7 @@ sub stop_words_reader {
 		chomp;
 		next if (/^\s+/g); # skip blank lines
 		$stop_words_hsh->{$_} = undef if (!exists $stop_words_hsh->{$_});
-		$stop_words_hsh->{ucfirst$_} = undef if (!exists $stop_words_hsh->{ucfirst$_});
+		$stop_words_hsh->{ucfirst$_} = undef if (!exists $stop_words_hsh->{ucfirst$_} and length$_ > 1);
 		$stop_words_hsh->{$_,} = undef if (!exists $stop_words_hsh->{$_,});
 
 	}; # while <WORDS>
@@ -461,12 +459,17 @@ sub recurive_search {
 
 			} # if gene name has one word or else
 			
-			$$line =~ s/^(.*?)$$complete_gene//;
+			my $quoted_gene = quotemeta($$complete_gene);
+			$$line =~ s/^(.*?)$quoted_gene//;
 			
 			if ($1) {
-				$$positive_lines .= $1 . "#$$complete_gene && $hash->{$possible_gene}->[2]#";
+			
+				$$positive_lines .= $1 . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
+			
 			} else {
-				$$positive_lines .= "#$$complete_gene && $hash->{$possible_gene}->[2]#";
+			
+				$$positive_lines .= " " . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
+			
 			}
 
 			return;
@@ -516,12 +519,17 @@ sub recurive_search {
 
 			} else {
 
-				$$line =~ s/^(.*?)$$complete_gene//;
+				my $quoted_gene = quotemeta($$complete_gene);
+				$$line =~ s/^(.*?)$quoted_gene//;
 				
 				if ($1) {
-					$$positive_lines .= $1 . "#$$complete_gene && $hash->{$possible_gene}->[2]#";
+				
+					$$positive_lines .= $1 . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
+				
 				} else {
-					$$positive_lines .= "#$$complete_gene && $hash->{$possible_gene}->[2]#";
+				
+					$$positive_lines .= " " . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
+				
 				}
 
 				return;
