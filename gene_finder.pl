@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Article_downloader.pl - This script reads a file that contains a 
+# gene_finder.pl - This script reads a file that contains a 
 #						  list of gene symbols and its corresponding 
 #						  synonyms and it creates a synonyms hash table.
 #						  Then, it looks for matches in a text file and 
@@ -32,14 +32,12 @@ die "\nYou have to introduce 3 files as command line arguments:\n" .
 	"\t- The text file you want to analyze\n" .
 	"\t- Stopwords file\n\n"
 
-	unless (@ARGV == 3);
+	unless (@ARGV >= 3);
 
 my $synonyms = shift @ARGV;
-my $problem_file = shift @ARGV;
 my $stop_words_file = shift @ARGV;
+my @problem_files = @ARGV;
 my %stop_words = ();
-my @tagged_lines = ();
-
 
 #********************************************************************************
 # MAIN LOOP 
@@ -56,12 +54,18 @@ print STDERR "\n## READING STOPWORDS LIST...\n";
 
 print STDERR "\n## LOOKING FOR GENES IN TEXT...\n";
 
-@tagged_lines = &text_analyzer($problem_file, \%hash_table, \%stop_words);
-$problem_file =~ s/.+\///;
-my $matches_out = "matches_$problem_file"; # Creating output file name
-&tagged_lines_filter(\@tagged_lines, $matches_out);
+foreach my $file (@problem_files) {
 
-print STDERR "\n## MATCHES SAVED AS $matches_out.\n## PROGRAM FINISHED ##\n";
+	my @tagged_lines = &text_analyzer($file, \%hash_table, \%stop_words);
+	$file =~ s/.+\///;
+	my $matches_out = "arreglo_$file"; # Creating output file name
+	&tagged_lines_filter(\@tagged_lines, $matches_out);
+
+	print STDERR "\n## MATCHES SAVED AS $matches_out.\n## PROGRAM FINISHED ##\n";
+
+}
+
+
 
 
 #********************************************************************************
@@ -374,11 +378,12 @@ sub text_analyzer($$) {
 		my @allwords = split /\s/, $line; 
 		my @words = grep { !exists $stop_words_hsh->{$_} } @allwords; # Removes stopwords for processing
 		my @words_copy = @words;
+		my $positive_lines = "";
 
 		for (my $i = 0; $i < @words;) {
 			
 			my $complete_gene = "";
-			&recurive_search($words[$i], \$complete_gene, $hash, \$line, @words_copy);
+			&recurive_search($words[$i], \$complete_gene, $hash, \$line, \$positive_lines, @words_copy);
 						
 			# skip complete gene from iteration (to avoid internal matches)
 			
@@ -400,8 +405,9 @@ sub text_analyzer($$) {
 			
 		} # foreach word
 
-		$line =~ s/^\s//;
-		push @tagged_lines, $line;
+		$positive_lines =~ s/^\s//;
+		$positive_lines .= $line if ($line);
+		push @tagged_lines, $positive_lines;
 		
 	} # while <TEXTFILE>
 
@@ -433,6 +439,7 @@ sub recurive_search {
 	my $complete_gene = shift;
 	my $hash = shift;
 	my $line = shift;
+	my $positive_lines = shift;
 	my @words_copy = @_;
 
 	return unless ($word); # ends function if it runs out of words
@@ -454,8 +461,14 @@ sub recurive_search {
 
 			} # if gene name has one word or else
 			
-			$$line =~ s/[^#]($$complete_gene)|^($$complete_gene)/ #$$complete_gene && $hash->{$possible_gene}->[2]#/;
+			$$line =~ s/^(.*?)$$complete_gene//;
 			
+			if ($1) {
+				$$positive_lines .= $1 . "#$$complete_gene && $hash->{$possible_gene}->[2]#";
+			} else {
+				$$positive_lines .= "#$$complete_gene && $hash->{$possible_gene}->[2]#";
+			}
+
 			return;
 	
 		} elsif ($hash->{$possible_gene}->[0] == 1) {
@@ -472,7 +485,7 @@ sub recurive_search {
 
 			splice @words_copy, 0, 1;
 			my $new_hash = $hash->{$possible_gene}->[1];
-			&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, @words_copy);
+			&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, @words_copy);
 
 		} elsif ($hash->{$possible_gene}->[0] == 2) {
 
@@ -499,12 +512,18 @@ sub recurive_search {
 
 			if ($words_copy[0] and exists $new_hash->{$next_word}) {
 
-				&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, @words_copy);
+				&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, @words_copy);
 
 			} else {
 
-				$$line =~ s/[^#]($$complete_gene)|^($$complete_gene)/ #$$complete_gene && $hash->{$possible_gene}->[2]#/;
+				$$line =~ s/^(.*?)$$complete_gene//;
 				
+				if ($1) {
+					$$positive_lines .= $1 . "#$$complete_gene && $hash->{$possible_gene}->[2]#";
+				} else {
+					$$positive_lines .= "#$$complete_gene && $hash->{$possible_gene}->[2]#";
+				}
+
 				return;
 				
 			} # if next word exists in hash table
