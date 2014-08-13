@@ -19,14 +19,6 @@ use strict;
 use Data::Dumper;
 use LWP::Simple;
 
-
-#********************************************************************************
-# VARIABLES 
-#********************************************************************************
-
-my $text 	   = "";
-my %hash_table = ();
-
 die "\nYou have to introduce 3 files as command line arguments:\n" .
 	"\t- Gene synonyms table\n" .
 	"\t- Stopwords file\n" .
@@ -34,9 +26,15 @@ die "\nYou have to introduce 3 files as command line arguments:\n" .
 
 	unless (@ARGV >= 3);
 
+#********************************************************************************
+# VARIABLES 
+#********************************************************************************
+
 my $synonyms 		= shift @ARGV;
 my $stop_words_file = shift @ARGV;
 my @problem_files   = @ARGV;
+my $text 	        = "";
+my %hash_table      = ();
 my %stop_words 		= ();
 
 #********************************************************************************
@@ -61,7 +59,7 @@ foreach my $file (@problem_files) {
 	my $matches_out = "matches_$file"; # Creating output file name
 	&tagged_lines_filter(\@tagged_lines, $matches_out);
 
-	print STDERR "\n## MATCHES SAVED AS $matches_out.\n## PROGRAM FINISHED ##\n";
+	print STDERR "\n## MATCHES SAVED AS $matches_out\n## PROGRAM FINISHED ##\n";
 
 }
 
@@ -338,9 +336,12 @@ sub stop_words_reader {
 		
 		chomp;
 		next if (/^\s+/g); # skip blank lines
+		my $word_comma = "$_,";
+		my $word_fullstop = "$_.";
 		$stop_words_hsh->{$_} = undef if (!exists $stop_words_hsh->{$_});
 		$stop_words_hsh->{ucfirst$_} = undef if (!exists $stop_words_hsh->{ucfirst$_} and length$_ > 1);
-		$stop_words_hsh->{$_,} = undef if (!exists $stop_words_hsh->{$_,});
+		$stop_words_hsh->{$word_comma} = undef if (!exists $stop_words_hsh->{$word_comma});
+		$stop_words_hsh->{$word_fullstop} = undef if (!exists $stop_words_hsh->{$word_fullstop});
 
 	}; # while <WORDS>
 
@@ -464,11 +465,11 @@ sub recurive_search {
 			
 			if ($1) {
 			
-				$$positive_lines .= $1 . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
+				$$positive_lines .= $1 . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
 			
 			} else {
 			
-				$$positive_lines .= " " . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
+				$$positive_lines .= " " . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
 			
 			}
 
@@ -524,11 +525,11 @@ sub recurive_search {
 				
 				if ($1) {
 				
-					$$positive_lines .= $1 . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
+					$$positive_lines .= $1 . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
 				
 				} else {
 				
-					$$positive_lines .= " " . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
+					$$positive_lines .= " " . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
 				
 				}
 
@@ -564,7 +565,7 @@ sub tagged_lines_filter {
 
 	foreach my $line (@$tagged_lines) {
 
-		print OUT $line, "\n" if $line =~ m/#.+&&.+#/g ;
+		print OUT $line, "\n" if $line =~ m/#.+#/g ;
 
 	} # foreach line
 
