@@ -424,6 +424,8 @@ sub text_analyzer {
 
 		$positive_lines  =~ s/^\s//;
 		$positive_lines .= $line if ($line);
+		$original_line   =~ s/^\s//; 
+		$original_line  .= $line if ($line);
 		$positive_lines .= "\t" . "$original_line";
 		push @tagged_lines, $positive_lines;
 		
