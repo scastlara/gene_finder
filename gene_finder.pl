@@ -394,7 +394,6 @@ sub text_analyzer {
 		my @words          = grep { !exists $stop_words_hsh->{$_} } @allwords; # Removes stopwords for processing
 		my @words_copy     = @words;
 		my $positive_lines = "";
-		my $complete_gene_names = "";
 
 		for (my $i = 0; $i < @words;) {
 			
@@ -417,14 +416,12 @@ sub text_analyzer {
 
 			} # if
 
-			$complete_gene_names .= "\t$complete_gene";
 			$complete_gene = "";
 			
 		} # foreach word
 
 		$positive_lines  =~ s/^\s//;
 		$positive_lines .= $line if ($line);
-		$positive_lines .= $complete_gene_names;
 		push @tagged_lines, $positive_lines;
 		
 	} # while <TEXTFILE>
@@ -485,13 +482,11 @@ sub recurive_search {
 			
 			if ($1) {
 			
-				$$positive_lines .= $1 . "aaaaa$hash->{$possible_gene}->[2]aaaaa";
-				#$$positive_lines .= $1 . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
-
+				$$positive_lines .= $1 . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
+			
 			} else {
 			
-				$$positive_lines .= " " . "aaaaa$hash->{$possible_gene}->[2]aaaaa";
-				#$$positive_lines .= "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
+				$$positive_lines .= " " . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
 			
 			} # if $1
  
@@ -547,13 +542,11 @@ sub recurive_search {
 				
 				if ($1) {
 				
-					$$positive_lines .= $1 . "aaaaa$hash->{$possible_gene}->[2]aaaaa";
-					#$$positive_lines .= $1 . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
+					$$positive_lines .= $1 . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
 				
 				} else {
 				
-					$$positive_lines .= " " . "aaaaa$hash->{$possible_gene}->[2]aaaaa";
-					#$$positive_lines .= "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
+					$$positive_lines .= " " . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
 				
 				}
 
@@ -591,7 +584,7 @@ sub tagged_lines_filter {
 
 	foreach my $line (@$tagged_lines) {
 
-		print OUT $line, "\n" if $line =~ m/aaaaa.+aaaaa/g ;
+		print OUT $line, "\n" if $line =~ m/#.+&&.+#/g ;
 
 	} # foreach line
 
