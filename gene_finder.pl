@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# gene_finder.pl - This script reads a file that contains a 
+# 		 gene_finder.pl - This script reads a file that contains a 
 #						  list of gene symbols and its corresponding 
 #						  synonyms and it creates a synonyms hash table.
 #						  Then, it looks for matches in a text file and 
@@ -41,26 +41,32 @@ my %stop_words 		= ();
 # MAIN LOOP 
 #********************************************************************************
 
-print STDERR "\n## STARTING PROGRAM ##\n## CREATING SYNONYMS HASH TABLE...\n";
+print STDERR "\n## STARTING PROGRAM ##\n\n" .
+			 "# CREATING SYNONYMS HASH TABLE...\n\n";
 
 &table_reader($synonyms);
 
-print STDERR "\n## READING STOPWORDS LIST...\n";
+print STDERR "# READING STOPWORDS LIST...\n\n";
 
 &stop_words_reader($stop_words_file, \%stop_words);
 
-print STDERR "\n## LOOKING FOR GENES IN TEXT...\n";
+print STDERR "# LOOKING FOR GENES IN TEXT...\n";
 
 foreach my $file (@problem_files) {
 
+	print STDERR "\t# Analyzing $file...\n";
+
 	my @tagged_lines = &text_analyzer($file, \%hash_table, \%stop_words);
+	
 	$file =~ s/.+\///;
-	my $matches_out = "matches_$file"; # Creating output file name
+	my $matches_out  = "matches_$file"; # Creating output file name
 	&tagged_lines_filter(\@tagged_lines, $matches_out);
 
-	print STDERR "\n## MATCHES SAVED AS $matches_out\n## PROGRAM FINISHED ##\n";
+	print STDERR "\t# Matches saved as: $matches_out\n\n";
 
 }
+
+print STDERR "\n## PROGRAM FINISHED ##\n";
 
 
 #********************************************************************************
@@ -456,7 +462,7 @@ sub recurive_search {
 
 	if (exists $hash->{$possible_gene}) {
 
-		if ($hash->{$possible_gene}->[0] == 0) {
+		if ($hash->{$possible_gene}->[0] == 0) { # if gene name has one word or else
 
 			if ($$complete_gene) {
 
@@ -466,24 +472,13 @@ sub recurive_search {
 
 				$$complete_gene = $word;
 
-			} # if gene name has one word or else
+			} 
 			
-			my $quoted_gene = quotemeta($$complete_gene);
-			$$line =~ s/^(.*?)$quoted_gene//;
-			
-			if ($1) {
-			
-				$$positive_lines .= $1 . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
-			
-			} else {
-			
-				$$positive_lines .= " " . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
-			
-			}
+			&line_builder($possible_gene, $line, $complete_gene, $positive_lines, $hash);
 
 			return;
 	
-		} elsif ($hash->{$possible_gene}->[0] == 1) {
+		} elsif ($hash->{$possible_gene}->[0] == 1) { # if gene name has one word or else
 
 			if ($$complete_gene) {
 
@@ -493,7 +488,7 @@ sub recurive_search {
 
 				$$complete_gene = $word;
 
-			} # if gene name has one word or else
+			} 
 
 			splice @words_copy, 0, 1;
 			my $new_hash = $hash->{$possible_gene}->[1];
@@ -528,18 +523,7 @@ sub recurive_search {
 
 			} else {
 
-				my $quoted_gene = quotemeta($$complete_gene);
-				$$line =~ s/^(.*?)$quoted_gene//;
-				
-				if ($1) {
-				
-					$$positive_lines .= $1 . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
-				
-				} else {
-				
-					$$positive_lines .= " " . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
-				
-				}
+				&line_builder($possible_gene, $line, $complete_gene, $positive_lines, $hash);
 
 				return;
 				
@@ -552,6 +536,47 @@ sub recurive_search {
 	} # if primary key exists
 
 }; # sub recurive_search
+
+
+#********************************************************************************
+# line_builder
+#
+# Arguments: ref to possible gene
+#			 line being analyzed
+#			 complete gene name found
+#		     ref to var with line that will be created
+#  			 ref to hash with gene symbol
+# 			 
+#			 
+# Returns: nothing
+#		   it creates output line
+#
+#
+
+sub line_builder {
+	
+	my $possible_gene  = shift;
+	my $line           = shift;
+	my $complete_gene  = shift;
+	my $positive_lines = shift;
+	my $hash           = shift;
+	my $quoted_gene    = quotemeta($$complete_gene);
+
+	$$line =~ s/^(.*?)$quoted_gene//;
+				
+	if ($1) {
+				
+		$$positive_lines .= $1 . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
+				
+	} else {
+				
+		$$positive_lines .= " " . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
+				
+	} # if
+
+	return; 
+
+} # sub line_builder
 
 
 #********************************************************************************
