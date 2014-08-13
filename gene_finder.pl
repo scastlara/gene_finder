@@ -394,12 +394,12 @@ sub text_analyzer {
 		my @words          = grep { !exists $stop_words_hsh->{$_} } @allwords; # Removes stopwords for processing
 		my @words_copy     = @words;
 		my $positive_lines = "";
-		my $complete_gene_names = "";
+		my $original_line = "";
 
 		for (my $i = 0; $i < @words;) {
 			
 			my $complete_gene = "";
-			&recurive_search($words[$i], \$complete_gene, $hash, \$line, \$positive_lines, @words_copy);
+			&recurive_search($words[$i], \$complete_gene, $hash, \$line, \$positive_lines, \$original_line, @words_copy);
 						
 			# skip complete gene from iteration (to avoid internal matches)
 			
@@ -417,14 +417,14 @@ sub text_analyzer {
 
 			} # if
 
-			$complete_gene_names .= "\t$complete_gene";
+
 			$complete_gene = "";
 			
 		} # foreach word
 
 		$positive_lines  =~ s/^\s//;
 		$positive_lines .= $line if ($line);
-		$positive_lines .= $complete_gene_names;
+		$positive_lines .= "\t" . "$original_line";
 		push @tagged_lines, $positive_lines;
 		
 	} # while <TEXTFILE>
@@ -459,6 +459,7 @@ sub recurive_search {
 	my $hash           = shift;
 	my $line           = shift;
 	my $positive_lines = shift;
+	my $original_line  = shift;
 	my @words_copy     = @_;
 
 	return unless ($word); # ends function if it runs out of words
@@ -486,11 +487,13 @@ sub recurive_search {
 			if ($1) {
 			
 				$$positive_lines .= $1 . "aaaaa$hash->{$possible_gene}->[2]aaaaa";
+				$$original_line .= $1 . "$$complete_gene";
 				#$$positive_lines .= $1 . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
 
 			} else {
 			
 				$$positive_lines .= " " . "aaaaa$hash->{$possible_gene}->[2]aaaaa";
+				$$original_line .= " " ."$$complete_gene";
 				#$$positive_lines .= "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
 			
 			} # if $1
@@ -511,7 +514,7 @@ sub recurive_search {
 
 			splice @words_copy, 0, 1;
 			my $new_hash = $hash->{$possible_gene}->[1];
-			&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, @words_copy);
+			&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, $original_line, @words_copy);
 
 		} elsif ($hash->{$possible_gene}->[0] == 2) {
 
@@ -538,7 +541,7 @@ sub recurive_search {
 
 			if ($words_copy[0] and exists $new_hash->{$next_word}) {
 
-				&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, @words_copy);
+				&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, $original_line, @words_copy);
 
 			} else {
 
@@ -548,11 +551,13 @@ sub recurive_search {
 				if ($1) {
 				
 					$$positive_lines .= $1 . "aaaaa$hash->{$possible_gene}->[2]aaaaa";
+					$$original_line .= $1 . "$$complete_gene";
 					#$$positive_lines .= $1 . "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
 				
 				} else {
 				
 					$$positive_lines .= " " . "aaaaa$hash->{$possible_gene}->[2]aaaaa";
+					$$original_line .= " " . "$$complete_gene";
 					#$$positive_lines .= "#$$complete_gene &&$hash->{$possible_gene}->[2]&&#";
 				
 				}
