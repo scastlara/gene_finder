@@ -19,10 +19,10 @@ use strict;
 use Data::Dumper;
 use LWP::Simple;
 
-die "\nYou have to introduce 3 files as command line arguments:\n" .
+die "\nYou have to introduce at least 3 files as command line arguments:\n" .
 	"\t- Gene synonyms table\n" .
 	"\t- Stopwords file\n" .
-	"\t- The text file you want to analyze\n\n"
+	"\t- Text file(s) you want to analyze\n\n"
 
 	unless (@ARGV >= 3);
 
@@ -191,7 +191,7 @@ sub table_reader {
 #			 ref to array with all synonyms of that symbol			 
 #
 # Returns: nothing, it creates a hash with the synonyms and the corresponding symbols
-#          it calls words_ladder() if necessary
+#          it calls recursive_hash() if necessary
 #
 #
 
@@ -251,7 +251,7 @@ sub hash_creator {
 		} else {
 
 			$hash_table{$first_word} = [] if (!exists $hash_table{$first_word});
-			&words_ladder($SYMBOL, \@syn_words, $hash_table{$first_word}, $synonym);
+			&recursive_hash($SYMBOL, \@syn_words, $hash_table{$first_word}, $synonym);
 	 		
 	    } # if 
 
@@ -261,7 +261,7 @@ sub hash_creator {
 
 
 #********************************************************************************
-# words_ladder()
+# recursive_hash()
 #
 # Arguments: gene symbol
 #			 ref to array with all the words of a synonym
@@ -272,7 +272,7 @@ sub hash_creator {
 #
 #
 
-sub words_ladder {
+sub recursive_hash {
 	
 	my $SYMBOL         = shift;
 	my $syn_words_ary  = shift;
@@ -316,9 +316,9 @@ sub words_ladder {
 
 	}; # if 
 
-	&words_ladder($SYMBOL, $syn_words_ary, $new_hsh, $synonym);
+	&recursive_hash($SYMBOL, $syn_words_ary, $new_hsh, $synonym);
 
-}; # sub words_ladder
+}; # sub recursive_hash
 
 
 #********************************************************************************
@@ -395,7 +395,7 @@ sub text_analyzer($$) {
 		for (my $i = 0; $i < @words;) {
 			
 			my $complete_gene = "";
-			&recurive_search($words[$i], \$complete_gene, $hash, \$line, \$positive_lines, @words_copy);
+			&recursive_search($words[$i], \$complete_gene, $hash, \$line, \$positive_lines, @words_copy);
 						
 			# skip complete gene from iteration (to avoid internal matches)
 			
@@ -446,7 +446,7 @@ sub text_analyzer($$) {
 #
 #
 
-sub recurive_search {
+sub recursive_search {
 	
 	my $word           = shift;
 	my $complete_gene  = shift;
@@ -474,7 +474,7 @@ sub recurive_search {
 
 			} 
 			
-			&line_builder($possible_gene, $line, $complete_gene, $positive_lines, $hash);
+			&write_line($possible_gene, $line, $complete_gene, $positive_lines, $hash);
 
 			return;
 	
@@ -492,7 +492,7 @@ sub recurive_search {
 
 			splice @words_copy, 0, 1;
 			my $new_hash = $hash->{$possible_gene}->[1];
-			&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, @words_copy);
+			&recursive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, @words_copy);
 
 		} elsif ($hash->{$possible_gene}->[0] == 2) {
 
@@ -519,11 +519,11 @@ sub recurive_search {
 
 			if ($words_copy[0] and exists $new_hash->{$next_word}) {
 
-				&recurive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, @words_copy);
+				&recursive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, @words_copy);
 
 			} else {
 
-				&line_builder($possible_gene, $line, $complete_gene, $positive_lines, $hash);
+				&write_line($possible_gene, $line, $complete_gene, $positive_lines, $hash);
 
 				return;
 				
@@ -535,11 +535,11 @@ sub recurive_search {
 
 	} # if primary key exists
 
-}; # sub recurive_search
+}; # sub recursive_search
 
 
 #********************************************************************************
-# line_builder
+# write_line
 #
 # Arguments: ref to possible gene
 #			 line being analyzed
@@ -553,7 +553,7 @@ sub recurive_search {
 #
 #
 
-sub line_builder {
+sub write_line {
 	
 	my $possible_gene  = shift;
 	my $line           = shift;
@@ -576,7 +576,7 @@ sub line_builder {
 
 	return; 
 
-} # sub line_builder
+} # sub write_line
 
 
 #********************************************************************************
