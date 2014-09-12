@@ -32,6 +32,8 @@ my $url = 'http://www.genenames.org/cgi-bin/download?'.
 
 my $page = get($url);
 
+$page =~ s/FIG, //g;
+
 open (OUT, ">$outfile")
 	or die "Can't open $outfile : $! \n";
 
