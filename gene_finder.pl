@@ -175,6 +175,9 @@ sub table_reader {
 		};
 
 		@all_synonyms = (@normal_fields, @quoted_fields);
+
+		@all_synonyms = grep { length($_) > 2} @all_synonyms;
+
 		&hash_creator($Ap_SYMBOL, \@all_synonyms);		
 
 	} # while <SYN>
@@ -605,5 +608,7 @@ sub tagged_lines_filter {
 	} # foreach line
 
 	close (OUT);
+
+	return;
 
 } # sub tagged_lines_filter
