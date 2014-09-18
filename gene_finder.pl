@@ -104,6 +104,8 @@ sub table_reader {
 		my @normal_fields = ();
 		my @quoted_fields = ();
 		my $Ap_SYMBOL     = $fields[0];
+
+		next if (length $Ap_SYMBOL < 3);
 		
 		if ($fields[1]) {
 
@@ -177,6 +179,10 @@ sub table_reader {
 		@all_synonyms = (@normal_fields, @quoted_fields);
 
 		@all_synonyms = grep { length($_) > 2} @all_synonyms;
+			# remove short synonyms
+
+		@all_synonyms = grep { $_ =~ m/[a-z]/gi } @all_synonyms;
+			# remove numeric synonyms
 
 		&hash_creator($Ap_SYMBOL, \@all_synonyms);		
 
@@ -350,13 +356,21 @@ sub stop_words_reader {
 		
 		next if (/^\s+/g); # skip blank lines
 		
-		my $word_comma    = "$_,";
-		my $word_fullstop = "$_.";
+		my @forms = ();
 
-		$stop_words_hsh->{$_}             = undef if (!exists $stop_words_hsh->{$_});
-		$stop_words_hsh->{ucfirst$_}      = undef if (!exists $stop_words_hsh->{ucfirst$_} and length$_ > 1);
-		$stop_words_hsh->{$word_comma}    = undef if (!exists $stop_words_hsh->{$word_comma});
-		$stop_words_hsh->{$word_fullstop} = undef if (!exists $stop_words_hsh->{$word_fullstop});
+		push @forms, "$_";
+		push @forms, "$_,";
+		push @forms, "$_.";
+		push @forms, "$_;";
+		push @forms, "($_";
+		push @forms, "$_)";
+		
+		foreach my $form (@forms) {
+
+			$stop_words_hsh->{$form} = undef;
+			$stop_words_hsh->{ucfirst$form} = undef if (length$_ > 1 and substr($form, 0, 1) ne "(");
+
+		}
 
 	}; # while <WORDS>
 
@@ -603,7 +617,7 @@ sub tagged_lines_filter {
 
 	foreach my $line (@$tagged_lines) {
 
-		print OUT $line, "\n" if $line =~ m/#.+#/g ;
+		print OUT $line, "\n" if $line =~ m/#.+#.+#.+#/g ;
 
 	} # foreach line
 
