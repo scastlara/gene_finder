@@ -184,6 +184,8 @@ sub table_reader {
 		@all_synonyms = grep { $_ =~ m/[a-z]/gi } @all_synonyms;
 			# remove numeric synonyms
 
+		&remove_synonyms(\@all_synonyms);
+
 		&hash_creator($Ap_SYMBOL, \@all_synonyms);		
 
 	} # while <SYN>
@@ -192,6 +194,37 @@ sub table_reader {
 
 } # sub table_reader
 
+
+#********************************************************************************
+sub remove_synonyms {
+	
+	my $synonyms_array = shift;
+	my @not_valid      = ( 'SARA',
+						   'ROS',
+						   'P200',
+						   'P110',
+						   'DAG',
+						   'gamma',
+						   'beta',
+						   'anova',
+						   'beta',
+						   'RNA binding protein',
+						   'yes',
+						   'minor',
+						   'proc',
+						   'mass',
+						   'red',
+						   'mice',
+						   'cell');
+
+	foreach my $stopword (@not_valid) {
+
+		@$synonyms_array = grep { $_ !~ m/^$stopword$/gi} @$synonyms_array;	
+	} 
+
+	return;
+
+}
 
 #********************************************************************************
 # hash_creator()
