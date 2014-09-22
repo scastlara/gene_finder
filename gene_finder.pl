@@ -207,15 +207,16 @@ sub remove_synonyms {
 						   'gamma',
 						   'beta',
 						   'anova',
-						   'beta',
 						   'RNA binding protein',
+						   'neuronal migration',
 						   'yes',
 						   'minor',
 						   'proc',
 						   'mass',
 						   'red',
 						   'mice',
-						   'cell');
+						   'cell',
+						   'chip');
 
 	foreach my $stopword (@not_valid) {
 
