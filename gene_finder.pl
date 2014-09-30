@@ -618,10 +618,15 @@ sub write_line {
 	my $positive_lines = shift;
 	my $hash           = shift;
 
-	$$complete_gene =~ s/[\.\),]$//;
+	$$complete_gene =~ s/[\.\),]$//;	# Word boundaries need to be removed							
+	$$complete_gene =~ s/^[\.\(,]//;	# so they can be added in the regex
+			
 	my $quoted_gene    = quotemeta($$complete_gene);
 				
-	$$line =~ s/^(.*?)$quoted_gene\b//;
+	$$line =~ s/^(.*?)\b$quoted_gene\b//; # Word boundaries are necessary so the
+										  # tagging will be done in genes and not
+										  # in words that contain genes 
+										  # eg. barMAPK, ERKfoo...
 				
 	if ($1) {
 				
