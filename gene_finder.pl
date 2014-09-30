@@ -617,9 +617,11 @@ sub write_line {
 	my $complete_gene  = shift;
 	my $positive_lines = shift;
 	my $hash           = shift;
-	my $quoted_gene    = quotemeta($$complete_gene);
 
-	$$line =~ s/^(.*?)$quoted_gene//;
+	$$complete_gene =~ s/[\.\),]$//;
+	my $quoted_gene    = quotemeta($$complete_gene);
+				
+	$$line =~ s/^(.*?)$quoted_gene\b//;
 				
 	if ($1) {
 				
