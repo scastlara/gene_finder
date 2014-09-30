@@ -74,16 +74,6 @@ print STDERR "\n## PROGRAM FINISHED ##\n";
 #********************************************************************************
 
 #********************************************************************************
-# table_reader()
-#
-# Arguments: file with symbols and synonyms in plain text (tbl)
-#
-# Returns: nothing, it creates an array with synonyms
-#		   it calls hash_creator()
-#
-#
-
-
 sub table_reader {
 	
 	my $synonyms = shift;
@@ -208,6 +198,7 @@ sub remove_synonyms {
 						   'beta',
 						   'delta',
 						   'anova',
+						   'GMP',
 						   'RNA binding protein',
 						   'RNA-binding protein',
 						   'neuronal migration',
@@ -234,17 +225,6 @@ sub remove_synonyms {
 }
 
 #********************************************************************************
-# hash_creator()
-#
-# Arguments: gene symbol
-#			 ref to array with all synonyms of that symbol			 
-#
-# Returns: nothing, it creates a hash with the synonyms and the corresponding symbols
-#          it calls recursive_hash() if necessary
-#
-#
-
-
 sub hash_creator {
 	
 	my $SYMBOL       = shift;
@@ -310,17 +290,6 @@ sub hash_creator {
 
 
 #********************************************************************************
-# recursive_hash()
-#
-# Arguments: gene symbol
-#			 ref to array with all the words of a synonym
-#            empty hash			 
-#
-# Returns:   nothing
-#			 it keeps calling itself until syn_words_ary runs out of words
-#
-#
-
 sub recursive_hash {
 	
 	my $SYMBOL         = shift;
@@ -371,17 +340,6 @@ sub recursive_hash {
 
 
 #********************************************************************************
-# stop_words_reader()
-#
-# Arguments: file with english stopwords
-#			 reference to stopwords hash
-#			 
-# Returns:   nothing
-#			 it creates stopwords keys 
-#
-#
-
-
 sub stop_words_reader {
 
 	my $file           = shift;
@@ -418,18 +376,6 @@ sub stop_words_reader {
 
 
 #********************************************************************************
-# text_analyzer()
-#
-# Arguments: file to analyze
-#			 synonyms hash table
-#			 stopwords hash
-#			 
-# Returns:   array with symbols appended
-#			 it finds genes in a text file
-#			 it calls recursive_search()
-#
-#
-
 sub text_analyzer($$) {
 	
 	my $file           = shift;
@@ -489,20 +435,6 @@ sub text_analyzer($$) {
 
 
 #********************************************************************************
-# recursive_search()
-#
-# Arguments: first word to analyze
-#			 ref to scalar with gene name (it becomes longer as the function calls itself)
-#			 hash with synonyms
-#			 line that it is processing
-#			 a copy of all the words in the sentence (from the first word onwards)
-# 
-#			 
-# Returns:   nothing 
-#			 it tags gene names and appends HUGO approved symbol to the sentence
-#
-#
-
 sub recursive_search {
 	
 	my $word           = shift;
@@ -596,20 +528,6 @@ sub recursive_search {
 
 
 #********************************************************************************
-# write_line
-#
-# Arguments: ref to possible gene
-#			 line being analyzed
-#			 complete gene name found
-#		     ref to var with line that will be created
-#  			 ref to hash with gene symbol
-# 			 
-#			 
-# Returns: nothing
-#		   it creates output line
-#
-#
-
 sub write_line {
 	
 	my $possible_gene  = shift;
@@ -644,16 +562,6 @@ sub write_line {
 
 
 #********************************************************************************
-# tagged_lines_filter
-#
-# Arguments: array ref with tagged lines
-#			 file output name 
-#			 
-# Returns: nothing
-#		   it prints in output file those lines with one or more tags
-#
-#
-
 sub tagged_lines_filter {
 	
 	my $tagged_lines = shift;
