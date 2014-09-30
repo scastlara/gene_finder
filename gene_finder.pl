@@ -541,9 +541,9 @@ sub write_line {
 			
 	my $quoted_gene    = quotemeta($$complete_gene);
 
-	my $b = '(?:(?<![\w-])(?=[\w-])|(?<=[\w-])(?![\w-]))';
+	my $bound = '(?:(?<![\w-])(?=[\w-])|(?<=[\w-])(?![\w-]))';
 				
-	$$line =~ s/^(.*?)$b$quoted_gene$b//; # Word boundaries are necessary so the
+	$$line =~ s/^(.*?)$bound$quoted_gene$bound//; # Word boundaries are necessary so the
 										  # tagging will be done in genes and not
 										  # in words that contain genes 
 										  # eg. barMAPK, ERKfoo...
