@@ -18,6 +18,7 @@ use warnings;
 use strict;
 use Data::Dumper;
 use LWP::Simple;
+use utf8;
 
 die "\nYou have to introduce at least 3 files as command line arguments:\n" .
 	"\t- Gene synonyms table\n" .
@@ -384,7 +385,7 @@ sub text_analyzer($$) {
 	my $outfile        = shift;
 	my @tagged_lines   = ();
 
-	open (TEXTFILE, $file)
+	open TEXTFILE, '<:encoding(UTF-8)', $file
 		or die "Can't open $file : $!\n";
 
 	while (my $line = <TEXTFILE>) {
@@ -538,15 +539,21 @@ sub write_line {
 
 	$$complete_gene =~ s/[\.\),]$//;	# Word boundaries have to be removed							
 	$$complete_gene =~ s/^[\.\(,]//;	# so they can be added in the regex
-			
-	my $quoted_gene    = quotemeta($$complete_gene);
+	
+	my $quoted_gene = $$complete_gene;
+	#$quoted_gene    =~ s/(\p{Greek})//g;
+	#print "$1\n" if $1;
+	$quoted_gene    = quotemeta($quoted_gene);
 
-	my $bound = '(?:(?<![\w-])(?=[\w-])|(?<=[\w-])(?![\w-]))';
+	my $bound = '(?:(?<![}\w/-\p{Greek}])(?=[\w/-\p{Greek}])|(?<=[\w/-])(?![\w/-\p{Greek}]))';
+
+	
+	#print "$$complete_gene : $quoted_gene\n";
 				
 	$$line =~ s/^(.*?)$bound$quoted_gene$bound//; # Word boundaries are necessary so the
-										  # tagging will be done in genes and not
-										  # in words that contain genes 
-										  # eg. barMAPK, ERKfoo...
+										  		  # tagging will be done in genes and not
+										  		  # in words that contain genes 
+										  		  # eg. barMAPK, ERKfoo...
 				
 	if ($1) {
 				
