@@ -542,7 +542,7 @@ sub write_line {
 	
 	my $quoted_gene = $$complete_gene;
 	$quoted_gene    = quotemeta($quoted_gene);
-	my $bound = '(?:(?<![}\w/-\p{Greek}])(?=[\w/-\p{Greek}])|(?<=[\w/-])(?![\w/-\p{Greek}]))';
+	my $bound = '(?:(?<![}\w/\-\p{Greek}])(?=[\w/\-\p{Greek}])|(?<=[\w/-])(?![\w/\-\p{Greek}]))';
 				
 	$$line =~ s/^(.*?)$bound$quoted_gene$bound//; # Word boundaries are necessary so the
 										  		  # tagging will be done in genes and not
