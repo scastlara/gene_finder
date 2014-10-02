@@ -541,14 +541,8 @@ sub write_line {
 	$$complete_gene =~ s/^[\.\(,]//;	# so they can be added in the regex
 	
 	my $quoted_gene = $$complete_gene;
-	#$quoted_gene    =~ s/(\p{Greek})//g;
-	#print "$1\n" if $1;
 	$quoted_gene    = quotemeta($quoted_gene);
-
 	my $bound = '(?:(?<![}\w/-\p{Greek}])(?=[\w/-\p{Greek}])|(?<=[\w/-])(?![\w/-\p{Greek}]))';
-
-	
-	#print "$$complete_gene : $quoted_gene\n";
 				
 	$$line =~ s/^(.*?)$bound$quoted_gene$bound//; # Word boundaries are necessary so the
 										  		  # tagging will be done in genes and not
@@ -576,7 +570,7 @@ sub tagged_lines_filter {
 	my $tagged_lines = shift;
 	my $outfile      = shift;
 	
-	open (OUT, "> $outfile")
+	open (OUT, '>:utf8', $outfile)
 		or die "Can't open $outfile : $!\n";
 
 	foreach my $line (@$tagged_lines) {
