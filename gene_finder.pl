@@ -45,11 +45,12 @@ my %stop_words 		= ();
 print STDERR "\n## STARTING PROGRAM ##\n\n" .
 			 "# CREATING SYNONYMS HASH TABLE...\n\n";
 
-&table_reader($synonyms);
+table_reader($synonyms);
+my %greek_dict = init_greek();
 
 print STDERR "# READING STOPWORDS LIST...\n\n";
 
-&stop_words_reader($stop_words_file, \%stop_words);
+stop_words_reader($stop_words_file, \%stop_words);
 
 print STDERR "# LOOKING FOR GENES IN TEXT...\n";
 
@@ -57,11 +58,11 @@ foreach my $file (@problem_files) {
 
 	print STDERR "\t# Analyzing $file...\n";
 
-	my @tagged_lines = &text_analyzer($file, \%hash_table, \%stop_words);
+	my @tagged_lines = text_analyzer($file, \%hash_table, \%stop_words, \%greek_dict);
 	
 	$file =~ s/.+\///;
 	my $matches_out  = "matches_$file"; # Creating output file name
-	&tagged_lines_filter(\@tagged_lines, $matches_out);
+	tagged_lines_filter(\@tagged_lines, $matches_out);
 
 	print STDERR "\t# Matches saved as: $matches_out\n\n";
 
@@ -175,15 +176,49 @@ sub table_reader {
 		@all_synonyms = grep { $_ =~ m/[a-z]/gi } @all_synonyms;
 			# remove numeric synonyms
 
-		&remove_synonyms(\@all_synonyms);
+		remove_synonyms(\@all_synonyms);
 
-		&hash_creator($Ap_SYMBOL, \@all_synonyms);		
+		hash_creator($Ap_SYMBOL, \@all_synonyms);		
 
 	} # while <SYN>
 
 	close (SYN);
 
 } # sub table_reader
+
+
+#********************************************************************************
+sub init_greek {
+	
+	my %greek_dict = (
+					α => 'alpha',
+					β => 'beta',
+					γ => 'gamma',
+					δ => 'delta',
+					ε => 'epsilon',
+					ζ => 'zeta',
+					η => 'eta',
+					θ => 'theta',
+					ι => 'iota',
+					κ => 'kappa',
+					λ => 'lambda',
+					μ => 'mu',
+					ν => 'nu',
+					ξ => 'xi',
+					π => 'pi',
+					ρ => 'rho',
+					σ => 'sigma',
+					τ => 'tau',
+					τ => 'upsilon',
+					φ => 'phi',
+					χ => 'chi',
+					ψ => 'psi',
+					ω => 'omega'
+					);
+
+	return (%greek_dict);
+
+} # sub greek_dict
 
 
 #********************************************************************************
@@ -281,7 +316,7 @@ sub hash_creator {
 		} else {
 
 			$hash_table{$first_word} = [] if (!exists $hash_table{$first_word});
-			&recursive_hash($SYMBOL, \@syn_words, $hash_table{$first_word}, $synonym);
+			recursive_hash($SYMBOL, \@syn_words, $hash_table{$first_word}, $synonym);
 	 		
 	    } # if 
 
@@ -335,7 +370,7 @@ sub recursive_hash {
 
 	}; # if 
 
-	&recursive_hash($SYMBOL, $syn_words_ary, $new_hsh, $synonym);
+	recursive_hash($SYMBOL, $syn_words_ary, $new_hsh, $synonym);
 
 }; # sub recursive_hash
 
@@ -377,12 +412,12 @@ sub stop_words_reader {
 
 
 #********************************************************************************
-sub text_analyzer($$) {
+sub text_analyzer {
 	
 	my $file           = shift;
 	my $hash           = shift;
 	my $stop_words_hsh = shift;
-	my $outfile        = shift;
+	my $greek_dict     = shift;
 	my @tagged_lines   = ();
 
 	open TEXTFILE, '<:encoding(UTF-8)', $file
@@ -391,6 +426,7 @@ sub text_analyzer($$) {
 	while (my $line = <TEXTFILE>) {
 
 		chomp $line;
+		$line =~ s/(\p{Greek})/$greek_dict->{lc$1}/ge; # Greek letters to ASCII
 		my @allwords       = split /\s/, $line; 
 		my @words          = grep { !exists $stop_words_hsh->{$_} } @allwords; # Removes stopwords for processing
 		my @words_copy     = @words;
@@ -399,7 +435,7 @@ sub text_analyzer($$) {
 		for (my $i = 0; $i < @words;) {
 			
 			my $complete_gene = "";
-			&recursive_search($words[$i], \$complete_gene, $hash, \$line, \$positive_lines, @words_copy);
+			recursive_search($words[$i], \$complete_gene, $hash, \$line, \$positive_lines, @words_copy);
 						
 			# skip complete gene from iteration (to avoid internal matches)
 			
@@ -464,7 +500,7 @@ sub recursive_search {
 
 			} 
 			
-			&write_line($possible_gene, $line, $complete_gene, $positive_lines, $hash);
+			write_line($possible_gene, $line, $complete_gene, $positive_lines, $hash);
 
 			return;
 	
@@ -482,7 +518,7 @@ sub recursive_search {
 
 			splice @words_copy, 0, 1;
 			my $new_hash = $hash->{$possible_gene}->[1];
-			&recursive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, @words_copy);
+			recursive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, @words_copy);
 
 		} elsif ($hash->{$possible_gene}->[0] == 2) {
 
@@ -509,11 +545,11 @@ sub recursive_search {
 
 			if ($words_copy[0] and exists $new_hash->{$next_word}) {
 
-				&recursive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, @words_copy);
+				recursive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, @words_copy);
 
 			} else {
 
-				&write_line($possible_gene, $line, $complete_gene, $positive_lines, $hash);
+				write_line($possible_gene, $line, $complete_gene, $positive_lines, $hash);
 
 				return;
 				
@@ -546,7 +582,7 @@ sub write_line {
 				
 	$$line =~ s/^(.*?)$bound$quoted_gene$bound//; # Word boundaries are necessary so the
 										  		  # tagging will be done in genes and not
-										  		  # in words that contain genes 
+										  		  # in words that contain gene names
 										  		  # eg. barMAPK, ERKfoo...
 				
 	if ($1) {
