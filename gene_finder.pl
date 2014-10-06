@@ -244,6 +244,9 @@ sub remove_synonyms {
 						   'proc',
 						   'mass',
 						   'red',
+						   'BETA-3',
+						   'Beta3',
+						   'beta2',
 						   'mice',
 						   'cell',
 						   'rho',
@@ -578,22 +581,26 @@ sub write_line {
 	
 	my $quoted_gene = $$complete_gene;
 	$quoted_gene    = quotemeta($quoted_gene);
-	my $bound = '(?:(?<![}\w/\-\p{Greek}])(?=[\w/\-\p{Greek}])|(?<=[\w/-])(?![\w/\-\p{Greek}]))';
+	my $bound = '(?:(?<![+\w/\-\p{Greek}])(?=[+\w/\-\p{Greek}])|(?<=[+\w/\-\p{Greek}])(?![+\w/\-\p{Greek}]))';
 				
-	$$line =~ s/^(.*?)$bound$quoted_gene$bound//; # Word boundaries are necessary so the
-										  		  # tagging will be done in genes and not
-										  		  # in words that contain gene names
-										  		  # eg. barMAPK, ERKfoo...
+	my $flag = $$line =~ s/^(.*?)$bound$quoted_gene$bound//; 
+						# Word boundaries are necessary so the
+						# tagging will be done in genes and not
+						# in words that contain gene names
+						# eg. barMAPK, ERKfoo...
+	if ($flag) {	
+
+		if ($1) {
 				
-	if ($1) {
+			$$positive_lines .= $1 . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
 				
-		$$positive_lines .= $1 . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
+		} else {
 				
-	} else {
+			$$positive_lines .= " " . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
 				
-		$$positive_lines .= " " . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
-				
-	} # if
+		} # if words before gene
+	
+	} # if match
 
 	return; 
 
