@@ -576,7 +576,7 @@ sub write_line {
 	my $positive_lines = shift;
 	my $hash           = shift;
 
-	$$complete_gene =~ s/[\.\),]+$//;	# Word boundaries have to be removed							
+	$$complete_gene =~ s/[\.\),;]+$//;	# Word boundaries have to be removed							
 	$$complete_gene =~ s/^[\.\(,]//;	# so they can be added in the regex
 	
 	my $quoted_gene = $$complete_gene;
