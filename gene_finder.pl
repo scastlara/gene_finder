@@ -55,7 +55,6 @@ stop_words_reader($stop_words_file, \%stop_words);
 print STDERR "# LOOKING FOR GENES IN TEXT...\n";
 
 foreach my $file (@problem_files) {
-
 	print STDERR "\t# Analyzing $file...\n";
 
 	my @tagged_lines = text_analyzer($file, \%hash_table, \%stop_words, \%greek_dict);
@@ -65,7 +64,6 @@ foreach my $file (@problem_files) {
 	tagged_lines_filter(\@tagged_lines, $matches_out);
 
 	print STDERR "\t# Matches saved as: $matches_out\n\n";
-
 }
 
 print STDERR "\n## PROGRAM FINISHED ##\n";
@@ -88,7 +86,6 @@ sub table_reader {
 	<SYN>; # skip 1st line
 	
 	while (my $line = <SYN>) {
-		
 		next if ($line =~ m/withdrawn/g);
 
 		my @fields        = split /\t/, $line;
@@ -100,72 +97,55 @@ sub table_reader {
 		next if (length $Ap_SYMBOL < 3);
 		
 		if ($fields[1]) {
-
 			my $Ap_NAME = $fields[1];
 			push @normal_fields, $Ap_NAME;
-
 		}; 
 
 		if ($fields[2]) {
-
 			my @Prev_SYMBOL = split /,/, $fields[2];
 			@Prev_SYMBOL    = map {$_=~ s/^\s//; $_} @Prev_SYMBOL;
 			push @normal_fields, @Prev_SYMBOL;
 		}; 
 
 		if ($fields[3]) {
-
 			my @SYN = split /,/, $fields[3];
 			@SYN    = map {$_=~ s/^\s//; $_} @SYN;
 			push @normal_fields, @SYN;
 		};
 		
 		if ($fields[4]) {
-
 			my $ENSEMBL = $fields[4];
 			push @normal_fields, $ENSEMBL;
 		}; 
 		
 		if ($fields[5]) {
-
 			my $REF_SEQ = $fields[5];
 			push @normal_fields, $REF_SEQ;
 		}; 
 
 		if ($fields[6]) {
-
 			my $UniProt = $fields[6];
 			push @normal_fields, $UniProt;
-
 		};
 
 		if ($fields[7]) {
-
 			my $prev_NAMES = $fields[7];
 
 			while ($prev_NAMES =~ m/"(.+?)"/g) {
-
 				my $match = $1;
 				$match    =~ s/^\s//;
        			push @quoted_fields, $match;
-    
    			 }; # while match
-
 		};
 
 		if ($fields[8]) {
-
 			my $NAME_syn = $fields[8];
-
+			
 			while ($NAME_syn =~ m/"(.+?)"/g) {
-    
     			my $match = $1;
-
-				$match =~ s/^\s//; # remove first character if it is a whitespace
+				$match    =~ s/^\s//; 
     			push @quoted_fields, $match;
-    
    			 }; # while match
-
 		};
 
 		@all_synonyms = (@normal_fields, @quoted_fields);
@@ -177,9 +157,7 @@ sub table_reader {
 			# remove numeric synonyms
 
 		remove_synonyms(\@all_synonyms);
-
 		hash_creator($Ap_SYMBOL, \@all_synonyms);		
-
 	} # while <SYN>
 
 	close (SYN);
@@ -255,7 +233,6 @@ sub remove_synonyms {
 						   'chip');
 
 	foreach my $stopword (@not_valid) {
-
 		@$synonyms_array = grep { $_ !~ m/^$stopword$/gi} @$synonyms_array;	
 	} 
 
@@ -272,25 +249,20 @@ sub hash_creator {
 	# SYMBOL KEYS!
 	
 	if (!exists $hash_table{$SYMBOL}) {
-
 		$hash_table{$SYMBOL}      = [];
 		$hash_table{$SYMBOL}->[0] = '0';
 		$hash_table{$SYMBOL}->[1] = undef;
 		$hash_table{$SYMBOL}->[2] = $SYMBOL;
 		$hash_table{$SYMBOL}->[3] = $SYMBOL; 
-
 	} elsif ($hash_table{$SYMBOL}->[0] == 1){
-
 		$hash_table{$SYMBOL}->[0] = '2';
 		$hash_table{$SYMBOL}->[2] = $SYMBOL;
 		$hash_table{$SYMBOL}->[3] = $SYMBOL; 
-
 	} # if 
 
 	# SYNONYM KEYS!
 
 	foreach my $synonym (@$synonyms_ary) {
-
 		my $ucsynoym   = uc $synonym; # make synonyms uppercase
 		$ucsynoym      =~ s/[^A-Z0-9\s]//g; # remove non word/number/space characters
 		my @syn_words  = split /\s/, $ucsynoym; # get each word of synonym
@@ -299,28 +271,21 @@ sub hash_creator {
 		return if (!$first_word);
 
 		if (@syn_words == 0) {
-			
 			$hash_table{$first_word} = [] if (!exists $hash_table{$first_word}); # initialize if doesn't exist
 			
 			if (!defined $hash_table{$first_word}->[0]) {
-
 				$hash_table{$first_word}->[0] = '0'; # index = 0 if it's a dead end and synonym didn't exist before
-			
 			} elsif ($hash_table{$first_word}->[0]) {
 
 				$hash_table{$first_word}->[0] = '2'; # index = 2 if it's a dead end BUT the index was 1
-
 			}; # if
 			
 			$hash_table{$first_word}->[1] = undef if (!defined $hash_table{$first_word}->[1]); # undefs 2nd value (hash) if it didn't exist before
 			$hash_table{$first_word}->[2] = $SYMBOL; # puts symbol if it's a dead end
-			$hash_table{$first_word}->[3] = $synonym; # puts original synonym if it's a dead end
-	 		
+			$hash_table{$first_word}->[3] = $synonym; # puts original synonym if it's a dead end	
 		} else {
-
 			$hash_table{$first_word} = [] if (!exists $hash_table{$first_word});
 			recursive_hash($SYMBOL, \@syn_words, $hash_table{$first_word}, $synonym);
-	 		
 	    } # if 
 
 	} # foreach
@@ -338,13 +303,9 @@ sub recursive_hash {
 	my $next_word      = shift @$syn_words_ary;
 		
 	if ($hash_table_hsh->[2]) {
-
 		$hash_table_hsh->[0] = '2'; # index = 2 if word already has a symbol
-
-	} else {
-		
+	} else {	
 		$hash_table_hsh->[0] = '1'; # otherwise, index = 1
-
 	}; # if symbol defined
 	
 	$hash_table_hsh->[1] = {} unless (defined $hash_table_hsh->[1]);
@@ -355,22 +316,19 @@ sub recursive_hash {
 	my $new_hsh = $hash_table_hsh->[1]->{$next_word};
 	
 	if (@$syn_words_ary == 0 and defined $new_hsh->[1]) {
-
 		$new_hsh->[0] = '2'; # index = 2 if it's a dead end but there's a defined hash in [1]
 		$new_hsh->[2] = $SYMBOL;
 		$new_hsh->[3] = $synonym; # puts original synonym if it's a dead end
 		
 		return;
-
+	
 	} elsif (@$syn_words_ary == 0) {
-
 		$new_hsh->[0] = '0'; # otherwise, index = 0
 		$new_hsh->[1] = undef;
 		$new_hsh->[2] = $SYMBOL;
 		$new_hsh->[3] = $synonym; # puts original synonym if it's a dead end
 		
 		return;
-
 	}; # if 
 
 	recursive_hash($SYMBOL, $syn_words_ary, $new_hsh, $synonym);
@@ -387,14 +345,11 @@ sub stop_words_reader {
 	open (WORDS, $file) 
 		or die "Can't open stopwords file\n";
 	
-	while (<WORDS>) {
-		
-		chomp;
-		
+	while (<WORDS>) {	
+		chomp;	
 		next if (/^\s+/g); # skip blank lines
 		
 		my @forms = ();
-
 		push @forms, "$_";
 		push @forms, "$_,";
 		push @forms, "$_.";
@@ -403,10 +358,8 @@ sub stop_words_reader {
 		push @forms, "$_)";
 		
 		foreach my $form (@forms) {
-
 			$stop_words_hsh->{$form} = undef;
 			$stop_words_hsh->{ucfirst$form} = undef if (length$_ > 1 and substr($form, 0, 1) ne "(");
-
 		}
 
 	}; # while <WORDS>
@@ -436,35 +389,28 @@ sub text_analyzer {
 		my $positive_lines = "";
 
 		for (my $i = 0; $i < @words;) {
-			
 			my $complete_gene = "";
 			recursive_search($words[$i], \$complete_gene, $hash, \$line, \$positive_lines, @words_copy);
 						
 			# skip complete gene from iteration (to avoid internal matches)
 			
 			if ($complete_gene) {
-
 				my @array_count = split /\s/, $complete_gene;
 				my $count       = @array_count;
 				
 				$i += $count; 
-				splice @words_copy, 0, $count;
-				
+				splice @words_copy, 0, $count;	
 			} else {
-
 				$i++;
 				splice @words_copy, 0, 1;
-
 			} # if
 
-			$complete_gene = "";
-			
+			$complete_gene = "";		
 		} # foreach word
 
 		$positive_lines  =~ s/^\s//;
 		$positive_lines .= $line if ($line);
 		push @tagged_lines, $positive_lines;
-		
 	} # while <TEXTFILE>
 
 	close (TEXTFILE);
@@ -494,13 +440,9 @@ sub recursive_search {
 		if ($hash->{$possible_gene}->[0] == 0) { # if gene name has one word or else
 
 			if ($$complete_gene) {
-
 				$$complete_gene .= " " . $word;
-
 			} else {
-
 				$$complete_gene = $word;
-
 			} 
 			
 			write_line($possible_gene, $line, $complete_gene, $positive_lines, $hash);
@@ -510,52 +452,37 @@ sub recursive_search {
 		} elsif ($hash->{$possible_gene}->[0] == 1) { # if gene name has one word or else
 
 			if ($$complete_gene) {
-
 				$$complete_gene .= " " . $word;
-
 			} else {
-
 				$$complete_gene = $word;
-
 			} 
 
 			splice @words_copy, 0, 1;
 			my $new_hash = $hash->{$possible_gene}->[1];
 			recursive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, @words_copy);
-
 		} elsif ($hash->{$possible_gene}->[0] == 2) {
 
 			if ($$complete_gene) {
-
 				$$complete_gene .= " " . $word;
-
 			} else {
 
 				$$complete_gene = $word;
-
 			} # if gene name has one word or else
 
 			my $new_hash = $hash->{$possible_gene}->[1];
 			splice @words_copy, 0, 1;
 			my $next_word = "";
 			
-			if ($words_copy[0]) {
-				
+			if ($words_copy[0]) {	
 				$next_word = uc($words_copy[0]);
 				$next_word =~ s/[^A-Z0-9\s]//gi;
-			
 			}
 
 			if ($words_copy[0] and exists $new_hash->{$next_word}) {
-
 				recursive_search($words_copy[0], $complete_gene, $new_hash, $line, $positive_lines, @words_copy);
-
 			} else {
-
 				write_line($possible_gene, $line, $complete_gene, $positive_lines, $hash);
-
-				return;
-				
+				return;		
 			} # if next word exists in hash table
 
 		}; # if index = (0 or 1 or 2)
@@ -590,14 +517,10 @@ sub write_line {
 						# eg. barMAPK, ERKfoo...
 	if ($flag) {	
 
-		if ($1) {
-				
-			$$positive_lines .= $1 . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
-				
-		} else {
-				
-			$$positive_lines .= " " . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";
-				
+		if ($1) {		
+			$$positive_lines .= $1 . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";		
+		} else {	
+			$$positive_lines .= " " . "#$$complete_gene#&&$hash->{$possible_gene}->[2]&&";		
 		} # if words before gene
 	
 	} # if match
@@ -617,13 +540,10 @@ sub tagged_lines_filter {
 		or die "Can't open $outfile : $!\n";
 
 	foreach my $line (@$tagged_lines) {
-
 		print OUT $line, "\n" if $line =~ m/#.+#.+#.+#/g ;
-
 	} # foreach line
 
 	close (OUT);
-
 	return;
 
 } # sub tagged_lines_filter
