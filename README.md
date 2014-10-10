@@ -1,4 +1,4 @@
-gene_finder
+Gene Finder
 ===========
 
 Gene tagger that uses a dictionary from HGNC
