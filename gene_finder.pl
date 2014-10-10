@@ -263,8 +263,8 @@ sub hash_creator {
 	# SYNONYM KEYS!
 
 	foreach my $synonym (@$synonyms_ary) {
-		my $ucsynoym   = uc $synonym; # make synonyms uppercase
-		$ucsynoym      =~ s/[^A-Z0-9\s]//g; # remove non word/number/space characters
+		my $ucsynoym   = uc $synonym; 			# make synonyms uppercase
+		$ucsynoym      =~ s/[^A-Z0-9\s]//g; 	# remove non word/number/space characters
 		my @syn_words  = split /\s/, $ucsynoym; # get each word of synonym
 		my $first_word = shift @syn_words;
 
