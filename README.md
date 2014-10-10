@@ -19,7 +19,7 @@ Scripts
 
 **HUGO_synonyms_downloader.pl** 
   - This script downloads a dictionary of gene synonyms
-    from HGNC. You can change the source of the synonys, 
+    from HGNC. You can change the source of the synonyms, 
     but you'll have to change gene_finder.pl to parse those
     correctly.
                 
