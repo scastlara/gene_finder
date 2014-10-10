@@ -5,7 +5,7 @@ Gene tagger that uses a dictionary from HGNC
 
 
 Scripts
-=======
+-------
 
 gene_finder.pl 
   -  This script tags genes using the HUGO dictionary.
