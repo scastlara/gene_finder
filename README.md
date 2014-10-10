@@ -7,7 +7,7 @@ Gene tagger that uses a dictionary from HGNC
 Scripts
 -------
 
-gene_finder.pl 
+*gene_finder.pl*
   -  This script tags genes using the HUGO dictionary.
 
         Arguments: 
@@ -17,7 +17,7 @@ gene_finder.pl
         - Text file(s) you want to analyze.
                   
 
-HUGO_synonyms_downloader.pl 
+*HUGO_synonyms_downloader.pl* 
   - This script downloads a dictionary of gene synonyms
     from HGNC. You can change the source of the synonys, 
     but you'll have to change gene_finder.pl to parse those
