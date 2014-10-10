@@ -4,10 +4,9 @@ gene_finder
 Gene tagger that uses a dictionary from HGNC
 
 
-Scripts                             
+Scripts
+=======
 
-
-########################################
 gene_finder.pl 
   -  This script tags genes using the HUGO dictionary.
 
@@ -17,7 +16,7 @@ gene_finder.pl
           This reduces the number of false positives.
         - Text file(s) you want to analyze.
                   
-########################################
+
 HUGO_synonyms_downloader.pl 
   - This script downloads a dictionary of gene synonyms
     from HGNC. You can change the source of the synonys, 
