@@ -52,7 +52,7 @@ die "\nYou have to introduce at least 3 files as command line arguments:\n" .
 
 my $synonyms 		= shift @ARGV;
 my $stop_words_file = shift @ARGV;
-my @problem_files   = @ARGV;
+my $problem_file   = shift @ARGV;
 my %hash_table      = ();
 my %stop_words 		= ();
 
@@ -73,17 +73,18 @@ stop_words_reader($stop_words_file, \%stop_words);
 
 print STDERR "# LOOKING FOR GENES IN TEXT...\n";
 
-foreach my $file (@problem_files) {
-	print STDERR "\t# Analyzing $file...\n";
 
-	my @tagged_lines = text_analyzer($file, \%hash_table, \%stop_words, \%greek_dict);
+print STDERR "\t# Analyzing $problem_file...\n";
 
-	$file =~ s/.+\///;
-	my $matches_out  = "matches_$file"; # Creating output file name
-	tagged_lines_filter(\@tagged_lines, $matches_out);
+my @tagged_lines = text_analyzer($problem_file, \%hash_table, \%stop_words, \%greek_dict);
 
-	print STDERR "\t# Matches saved as: $matches_out\n\n";
-}
+$problem_file =~ s/.+\///;
+$problem_file =~ s/\.txt/\.mtches/;
+my $matches_out  = "$problem_file"; # Creating output file name
+tagged_lines_filter(\@tagged_lines, $matches_out);
+
+print STDERR "\t# Matches saved as: $matches_out\n\n";
+
 
 print STDERR "\n## PROGRAM FINISHED ##\n";
 
