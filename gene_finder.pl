@@ -83,8 +83,6 @@ $problem_file =~ s/\.txt/\.mtches/;
 my $matches_out  = "$problem_file"; # Creating output file name
 tagged_lines_filter(\@tagged_lines, $matches_out);
 
-print STDERR "\t# Matches saved as: $matches_out\n\n";
-
 
 print STDERR "\n## PROGRAM FINISHED ##\n";
 
@@ -556,6 +554,10 @@ sub tagged_lines_filter {
 	my $tagged_lines = shift;
 	my $outfile      = shift;
 
+	if (-d 'mtches') {
+		$outfile = "mtches/$outfile";
+	}
+
 	open (OUT, '>:utf8', $outfile)
 		or die "Can't open $outfile : $!\n";
 
@@ -563,6 +565,8 @@ sub tagged_lines_filter {
 		print OUT $line, "\n" if $line =~ m/#.+#.+#.+#/g ;
 	} # foreach line
 
+	print STDERR "\t# Matches saved as: $outfile\n\n";
+	
 	close (OUT);
 	return;
 
