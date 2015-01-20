@@ -35,9 +35,36 @@
 
 use warnings;
 use strict;
+use Getopt::Std;
 use Data::Dumper;
 use LWP::Simple;
 use utf8;
+
+my %options = ();
+getopts("h", \%options);
+
+if (defined $options{h} or @ARGV == 0) {
+	print qq(
+====================
+gene_finder.pl
+====================
+This script reads a file that contains a list of gene symbols and its 
+corresponding synonyms and it creates a synonyms hash table. Then, it 
+looks for matches in a text file and saves the lines containing them as 
+matches_originalfile.txt
+
+		Arguments:	Synonyms tabular file
+				Stopwords file
+				Text file(s) to analyze
+
+		Options:		
+				-h : help
+
+);
+
+	exit(1);	
+}
+
 
 die "\nYou have to introduce at least 3 files as command line arguments:\n" .
 	"\t- Gene synonyms table\n" .
